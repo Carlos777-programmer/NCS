@@ -1,0 +1,408 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | NCS ERP - Estética Automotiva</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #04060b;
+            --panel-bg: rgba(10, 15, 28, 0.85);
+            --border-glow: rgba(13, 110, 253, 0.3);
+            --text-main: #f1f1f4;
+            --text-muted: #8f8f9d;
+            --ncs-blue: #0d6efd; 
+            --ncs-blue-light: #38bdf8;
+            --sucesso: #04d361;
+            --erro: #f75a68;
+            --borda: #1e293b;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(13, 110, 253, 0.12) 0px, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(56, 189, 248, 0.08) 0px, transparent 40%),
+                linear-gradient(135deg, #04060b 0%, #091224 100%);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Elementos de fundo animados */
+        .background-glows {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.18;
+            animation: floatOrb 12s infinite alternate ease-in-out;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--ncs-blue);
+            top: -100px;
+            left: -100px;
+        }
+
+        .orb-2 {
+            width: 450px;
+            height: 450px;
+            background: #1e40af;
+            bottom: -150px;
+            right: -100px;
+            animation-delay: -4s;
+        }
+
+        @keyframes floatOrb {
+            0% { transform: translateY(0px) translateX(0px) scale(1); }
+            50% { transform: translateY(30px) translateX(20px) scale(1.1); }
+            100% { transform: translateY(-20px) translateX(-30px) scale(0.95); }
+        }
+
+        @keyframes fadeInView {
+            from {
+                opacity: 0;
+                transform: translateY(25px) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 2;
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 2px solid var(--ncs-blue);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8), 0 0 40px var(--border-glow);
+            animation: fadeInView 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .login-container:hover {
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 50px rgba(13, 110, 253, 0.3);
+        }
+
+        .header-login {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        /* Container do Vídeo da Logo (Sem efeito reluzente) */
+        .logo-wrapper {
+            position: relative;
+            display: inline-block;
+            max-width: 220px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.2);
+        }
+
+        .logo-wrapper video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .header-login h2 {
+            margin: 0;
+            color: var(--text-main);
+            font-size: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #fff 0%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-login p {
+            color: var(--text-muted);
+            margin: 5px 0 0 0;
+            font-size: 13px;
+        }
+
+        /* Mensagens de Erro do Django */
+        .alert-erro {
+            background: rgba(247, 90, 104, 0.1);
+            border: 1px solid rgba(247, 90, 104, 0.25);
+            color: var(--erro);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: shakeAlert 0.4s ease-in-out;
+        }
+
+        @keyframes shakeAlert {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-main);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Estrutura de Input Group */
+        .input-group-custom {
+            display: flex;
+            align-items: center;
+            background-color: rgba(4, 6, 11, 0.6);
+            border: 1px solid var(--borda);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .input-group-custom:focus-within {
+            border-color: var(--ncs-blue);
+            box-shadow: 0 0 12px rgba(13, 110, 253, 0.25);
+            background-color: rgba(4, 6, 11, 0.9);
+        }
+
+        .input-group-icon {
+            padding: 12px 16px;
+            color: var(--text-muted);
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 46px;
+            transition: color 0.3s;
+        }
+
+        .input-group-custom:focus-within .input-group-icon {
+            color: var(--ncs-blue-light);
+        }
+
+        .input-group-custom input {
+            flex: 1;
+            width: 100%;
+            padding: 12px 16px 12px 4px;
+            background: transparent !important;
+            border: none !important;
+            color: var(--text-main) !important;
+            font-size: 14px;
+            outline: none !important;
+            box-sizing: border-box;
+        }
+
+        .input-group-custom input:-webkit-autofill {
+            -webkit-text-fill-color: var(--text-main) !important;
+            -webkit-box-shadow: 0 0 0px 1000px var(--bg-dark) inset !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        .btn-toggle-password {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            height: 100%;
+            transition: color 0.2s;
+        }
+
+        .btn-toggle-password:hover {
+            color: var(--text-main);
+        }
+
+        .btn-enviar {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            box-shadow: 0 4px 20px rgba(13, 110, 253, 0.35);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-enviar::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(60deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transform: rotate(45deg) translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .btn-enviar:hover::after {
+            transform: rotate(45deg) translateX(100%);
+        }
+
+        .btn-enviar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(13, 110, 253, 0.55);
+            filter: brightness(1.1);
+        }
+
+        .btn-enviar:active {
+            transform: translateY(0);
+        }
+
+        .footer-links {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+        }
+
+        .footer-links a {
+            color: var(--ncs-blue-light);
+            text-decoration: none;
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+
+        .footer-links a:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Orbs de fundo para trazer movimento e vida -->
+    <div class="background-glows">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <div class="login-container">
+        <div class="header-login">
+            <!-- Vídeo da Logo Animada (MP4) -->
+            <div class="logo-wrapper">
+                <video autoplay loop muted playsinline>
+                    <source src="{% static 'core/img/ncs_logo.mp4' %}" type="video/mp4">
+                    Seu navegador não suporta a reprodução de vídeos.
+                </video>
+            </div>
+            <h2>NCS ERP</h2>
+            <p>Painel de Gestão - Estética Automotiva</p>
+        </div>
+
+        {% if form.errors %}
+            <div class="alert-erro">
+                <i class="fa-solid fa-circle-xmark"></i>
+                <div>Usuário ou senha incorretos. Tente novamente.</div>
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="id_username">Usuário:</label>
+                <div class="input-group-custom">
+                    <span class="input-group-icon">
+                        <i class="fa-solid fa-user"></i>
+                    </span>
+                    {{ form.username }}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_password">Senha:</label>
+                <div class="input-group-custom">
+                    <span class="input-group-icon">
+                        <i class="fa-solid fa-lock"></i>
+                    </span>
+                    {{ form.password }}
+                    <button class="btn-toggle-password" type="button" id="btnToggle">
+                        <i class="fa-solid fa-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-enviar">
+                <i class="fa-solid fa-right-to-bracket me-2"></i> Autenticar no Sistema
+            </button>
+        </form>
+
+        <div class="footer-links">
+            <p>Precisa de suporte? <a href="#">Contatar Administrador</a></p>
+        </div>
+    </div>
+
+<script>
+    const passwordInput = document.getElementById('id_password') || document.querySelector('input[type="password"]');
+    const toggleButton = document.getElementById('btnToggle');
+    const eyeIcon = document.getElementById('eyeIcon');
+
+    if (toggleButton && passwordInput) {
+        toggleButton.addEventListener('click', function () {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            if (type === 'text') {
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        });
+    }
+</script>
+</body>
+</html>

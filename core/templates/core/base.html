@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NCS ERP | Estética Automotiva{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Custom NCS Dark Gradient Style -->
+    <style>
+        body {
+            background: linear-gradient(135deg, #060a12 0%, #0c1b33 50%, #102a45 100%);
+            color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .ncs-glass-card {
+            background: rgba(16, 28, 52, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <main class="container my-auto py-5">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="text-center py-3 text-secondary small">
+        &copy; 2026 NCS ERP - Automotive Management System. All rights reserved.
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
