@@ -1,0 +1,61 @@
+{% extends 'core/base.html' %}
+
+{% block title %}NCS ERP | Dashboard{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <header class="topbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button class="btn-toggle" id="sidebarToggle" title="Esconder/Exibir Menu"><i class="fa-solid fa-bars"></i></button>
+            <div>
+                <h1 style="margin: 0;">Painel de Controle</h1>
+                <p style="margin: 5px 0 0 0; color: var(--text-muted);">Bem-vindo de volta, {{ request.user.username }}</p>
+            </div>
+        </div>
+    </header>
+
+    <section class="stats-grid">
+        <div class="stat-card">
+            <h3>Em Execução</h3>
+            <p>04</p>
+        </div>
+        <div class="stat-card">
+            <h3>Concluídos Hoje</h3>
+            <p>12</p>
+        </div>
+        <div class="stat-card">
+            <h3>Faturamento Mensal</h3>
+            <p>R$ 8.450</p>
+        </div>
+    </section>
+
+    <section class="table-container">
+        <h2 style="font-size: 18px; margin: 0 0 15px 0;">Recentes Ordens de Serviço</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Veículo</th>
+                    <th>Status</th>
+                    <th>Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="color: var(--text-main); font-weight: 600;">João Silva</td>
+                    <td>VW Golf TSI</td>
+                    <td style="color: var(--ncs-blue-light);">Em andamento</td>
+                    <td>R$ 450,00</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-main); font-weight: 600;">Maria Souza</td>
+                    <td>BMW X1</td>
+                    <td style="color: #04d361;">Concluído</td>
+                    <td>R$ 1.200,00</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+{% endblock %}

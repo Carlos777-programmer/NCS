@@ -1,0 +1,49 @@
+{% extends 'core/base.html' %}
+
+{% block title %}NCS ERP | Veículos{% endblock %}
+{% block nav_veiculos %}active{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <header class="topbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button class="btn-toggle" id="sidebarToggle" title="Esconder/Exibir Menu"><i class="fa-solid fa-bars"></i></button>
+            <div>
+                <h1 style="margin: 0;">Frota de Veículos</h1>
+                <p style="margin: 5px 0 0 0; color: var(--text-muted);">Lista de todos os veículos cadastrados no sistema</p>
+            </div>
+        </div>
+        <a href="{% url 'veiculo_create' %}" class="btn-primary"><i class="fa-solid fa-plus"></i> Novo Veículo</a>
+    </header>
+
+    <section class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Marca / Modelo</th>
+                    <th>Placa</th>
+                    <th>Ano</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for veiculo in veiculos %}
+                <tr>
+                    <td style="color: var(--text-main); font-weight: 600;">{{ veiculo.cliente.nome }}</td>
+                    <td>{{ veiculo.marca }} {{ veiculo.modelo }}</td>
+                    <td style="color: var(--ncs-blue-light); font-weight: bold;">{{ veiculo.placa }}</td>
+                    <td>{{ veiculo.ano }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <i class="fa-solid fa-car" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                        Nenhum veículo cadastrado ainda.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</main>
+{% endblock %}
