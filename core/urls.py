@@ -1,5 +1,6 @@
 from django.urls import path
 from django.contrib.auth.views import LogoutView
+from . import views
 from .views import (
     CustomLoginView, dashboard, 
     clientes_list, cliente_create, 
@@ -14,4 +15,6 @@ urlpatterns = [
     path('clientes/novo/', cliente_create, name='cliente_create'),
     path('veiculos/', veiculos_list, name='veiculos_list'),
     path('veiculos/novo/', veiculo_create, name='veiculo_create'),
+    path('ordens-servico/', views.ordens_servico_list, name='ordens_servico_list'),
+    path('ordens-servico/novo/', views.ordem_servico_create, name='ordem_servico_create'),
 ]

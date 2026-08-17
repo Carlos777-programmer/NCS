@@ -1,9 +1,8 @@
 from django.contrib.auth.views import LoginView
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .forms import LoginForm
-from .models import Cliente, Veiculo
-from .forms import ClienteForm, VeiculoForm
+from .models import Cliente, Veiculo, OrdemServico
+from .forms import ClienteForm, VeiculoForm, LoginForm, OrdemServicoForm
 
 def login_view(request):
     return render(request, 'core/login.html')
@@ -48,3 +47,17 @@ def veiculo_create(request):
     else:
         form = VeiculoForm()
     return render(request, 'core/veiculo_form.html', {'form': form})
+
+def ordens_servico_list(request):
+    ordens = OrdemServico.objects.all().order_by('-criado_em')
+    return render(request, 'core/ordens_servico_list.html', {'ordens': ordens})
+
+def ordem_servico_create(request):
+    if request.method == 'POST':
+        form = OrdemServicoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('ordens_servico_list')
+    else:
+        form = OrdemServicoForm()
+    return render(request, 'core/ordem_servico_form.html', {'form': form})

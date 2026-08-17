@@ -36,13 +36,13 @@ class OrdemServico(models.Model):
         ('CANCELADO', 'Cancelado'),
     ]
 
-    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
-    veiculo = models.ForeignKey(Veiculo, on_delete=models.CASCADE)
-    servicos = models.ManyToManyField(Servico)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDENTE')
-    valor_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    observacoes = models.TextField(blank=True, null=True)
-    criado_em = models.DateTimeField(auto_now_add=True)
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, verbose_name="Cliente")
+    veiculo = models.ForeignKey(Veiculo, on_delete=models.CASCADE, verbose_name="Veículo")
+    servicos = models.ManyToManyField(Servico, verbose_name="Serviços")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDENTE', verbose_name="Status")
+    valor_total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, verbose_name="Valor Total (R$)")
+    observacoes = models.TextField(blank=True, null=True, verbose_name="Observações")
+    criado_em = models.DateTimeField(auto_now_add=True, verbose_name="Data de Abertura")
 
     def __str__(self):
         return f"OS #{self.id} - {self.cliente.nome} ({self.veiculo.placa})"

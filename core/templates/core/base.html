@@ -41,13 +41,39 @@
             transition: all 0.3s ease;
         }
 
-        .sidebar h2 {
-            font-size: 20px;
-            color: var(--ncs-blue);
-            margin-bottom: 40px;
+        /* Estilo do container da Logo Animada na Sidebar */
+        .sidebar-logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 35px;
+            text-align: center;
+        }
+
+        .sidebar-logo-wrapper {
+            width: 250px;
+            height: 250px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-logo-wrapper video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none; /* Evita cliques indesejados no vídeo */
+        }
+
+        .sidebar-logo-container h2 {
+            font-size: 16px;
+            color: var(--ncs-blue-light);
+            margin: 0;
             text-transform: uppercase;
             letter-spacing: 2px;
-            text-align: center;
+            font-weight: 700;
         }
 
         .nav-item {
@@ -208,7 +234,7 @@
                 left: -260px;
                 height: 100vh;
                 z-index: 1100;
-                background: #04060b; /* Fundo totalmente sólido para evitar transparência */
+                background: #04060b;
                 box-shadow: 10px 0 30px rgba(0,0,0,0.9);
             }
 
@@ -242,11 +268,20 @@
 <body>
 
     <aside class="sidebar" id="sidebar">
-        <h2>NCS ERP</h2>
+        <!-- Logo Animada no Topo da Sidebar -->
+        <div class="sidebar-logo-container">
+            <div class="sidebar-logo-wrapper">
+                <video autoplay loop muted playsinline>
+                    <source src="{% static 'core/img/ncs_logo.mp4' %}" type="video/mp4">
+                </video>
+            </div>
+            <h5>"A única maneira de fazer um excelente trabalho é amar o que você faz." — Steve Jobs</h5>
+        </div>
+
         <a href="{% url 'dashboard' %}" class="nav-item {% block nav_dashboard %}{% endblock %}"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
         <a href="{% url 'clientes_list' %}" class="nav-item {% block nav_clientes %}{% endblock %}"><i class="fa-solid fa-users"></i> Clientes</a>
         <a href="{% url 'veiculos_list' %}" class="nav-item {% block nav_veiculos %}{% endblock %}"><i class="fa-solid fa-car"></i> Veículos</a>
-        <a href="#" class="nav-item"><i class="fa-solid fa-clipboard-check"></i> Ordens de Serviço</a>
+        <a href="{% url 'ordens_servico_list' %}" class="nav-item {% block nav_ordens %}{% endblock %}"><i class="fa-solid fa-clipboard-check"></i> Ordens de Serviço</a>
         <div style="margin-top: auto;">
             <form action="{% url 'logout' %}" method="post" style="margin: 0;">
                 {% csrf_token %}

@@ -1,0 +1,75 @@
+{% extends 'core/base.html' %}
+
+{% block title %}NCS ERP | Ordens de Serviço{% endblock %}
+{% block nav_ordens %}active{% endblock %}
+
+{% block content %}
+<main class="main-content">
+    <header class="topbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button class="btn-toggle" id="sidebarToggle" title="Esconder/Exibir Menu"><i class="fa-solid fa-bars"></i></button>
+            <div>
+                <h1 style="margin: 0;">Ordens de Serviço</h1>
+                <p style="margin: 5px 0 0 0; color: var(--text-muted);">Gerencie os serviços e manutenções da oficina</p>
+            </div>
+        </div>
+        <a href="{% url 'ordem_servico_create' %}" class="btn-primary"><i class="fa-solid fa-plus"></i> Nova O.S.</a>
+    </header>
+
+    <section class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>#ID</th>
+                    <th>Cliente</th>
+                    <th>Veículo</th>
+                    <th>Status</th>
+                    <th>Valor</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for os in ordens %}
+                <tr>
+                    <td style="color: var(--text-main); font-weight: bold;">#{{ os.id }}</td>
+                    <td style="color: var(--text-main); font-weight: 600;">{{ os.cliente.nome }}</td>
+                    <td>{{ os.veiculo.marca }} {{ os.veiculo.modelo }} ({{ os.veiculo.placa }})</td>
+                    <td>
+                        <span class="badge-status 
+                            {% if os.status == 'Concluído' %}badge-success
+                            {% elif os.status == 'Em Andamento' %}badge-info
+                            {% elif os.status == 'Cancelado' %}badge-danger
+                            {% else %}badge-warning{% endif %}">
+                            {{ os.status }}
+                        </span>
+                    </td>
+                    <td style="color: var(--ncs-blue-light); font-weight: bold;">R$ {{ os.valor }}</td>
+                    <td>{{ os.data_criacao|date:"d/m/Y H:i" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <i class="fa-solid fa-clipboard-check" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                        Nenhuma Ordem de Serviço cadastrada ainda.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<style>
+    .badge-status {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+    }
+    .badge-success { background: rgba(40, 167, 69, 0.15); color: #28a745; border: 1px solid rgba(40, 167, 69, 0.3); }
+    .badge-info { background: rgba(13, 110, 253, 0.15); color: var(--ncs-blue-light); border: 1px solid rgba(13, 110, 253, 0.3); }
+    .badge-danger { background: rgba(247, 90, 104, 0.15); color: #f75a68; border: 1px solid rgba(247, 90, 104, 0.3); }
+    .badge-warning { background: rgba(255, 193, 7, 0.15); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.3); }
+</style>
+{% endblock %}

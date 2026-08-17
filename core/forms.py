@@ -1,6 +1,6 @@
 from django.contrib.auth.forms import AuthenticationForm
 from django import forms
-from .models import Cliente, Veiculo
+from .models import Cliente, Veiculo, OrdemServico
 
 class LoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
@@ -33,4 +33,17 @@ class VeiculoForm(forms.ModelForm):
             'modelo': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'Ex: Gol G5'}),
             'placa': forms.TextInput(attrs={'class': 'form-input', 'placeholder': 'ABC-1234 ou ABC1D23', 'style': 'text-transform: uppercase;'}),
             'ano': forms.NumberInput(attrs={'class': 'form-input', 'placeholder': '2026'}),
+        }
+
+class OrdemServicoForm(forms.ModelForm):
+    class Meta:
+        model = OrdemServico
+        fields = ['cliente', 'veiculo', 'servicos', 'status', 'valor_total', 'observacoes']
+        widgets = {
+            'cliente': forms.Select(attrs={'class': 'form-control'}),
+            'veiculo': forms.Select(attrs={'class': 'form-control'}),
+            'servicos': forms.SelectMultiple(attrs={'class': 'form-control', 'style': 'height: 120px;'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+            'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'observacoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Observações...'}),
         }
