@@ -282,6 +282,8 @@
         <a href="{% url 'clientes_list' %}" class="nav-item {% block nav_clientes %}{% endblock %}"><i class="fa-solid fa-users"></i> Clientes</a>
         <a href="{% url 'veiculos_list' %}" class="nav-item {% block nav_veiculos %}{% endblock %}"><i class="fa-solid fa-car"></i> Veículos</a>
         <a href="{% url 'ordens_servico_list' %}" class="nav-item {% block nav_ordens %}{% endblock %}"><i class="fa-solid fa-clipboard-check"></i> Ordens de Serviço</a>
+        <a href="{% url 'servicos_list' %}" class="nav-item {% block nav_servicos %}{% endblock %}"><i class="fa-solid fa-wrench"></i> Serviços</a>
+        
         <div style="margin-top: auto;">
             <form action="{% url 'logout' %}" method="post" style="margin: 0;">
                 {% csrf_token %}

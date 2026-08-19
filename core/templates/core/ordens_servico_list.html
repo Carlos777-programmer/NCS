@@ -26,6 +26,7 @@
                     <th>Status</th>
                     <th>Valor</th>
                     <th>Data</th>
+                    <th style="text-align: center;">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -43,12 +44,22 @@
                             {{ os.status }}
                         </span>
                     </td>
-                    <td style="color: var(--ncs-blue-light); font-weight: bold;">R$ {{ os.valor }}</td>
+                    <td style="color: var(--ncs-blue-light); font-weight: bold;">
+                        R$ {{ os.valor|default:"0,00" }}
+                    </td>
                     <td>{{ os.data_criacao|date:"d/m/Y H:i" }}</td>
+                    <td style="text-align: center;">
+                        <a href="{% url 'ordem_servico_update' os.id %}" class="btn-action btn-edit" title="Editar O.S.">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>
+                        <a href="{% url 'ordem_servico_delete' os.id %}" class="btn-action btn-delete" title="Excluir O.S.">
+                            <i class="fa-solid fa-trash"></i>
+                        </a>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    <td colspan="7" style="text-align: center; padding: 40px; color: var(--text-muted);">
                         <i class="fa-solid fa-clipboard-check" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
                         Nenhuma Ordem de Serviço cadastrada ainda.
                     </td>
@@ -71,5 +82,36 @@
     .badge-info { background: rgba(13, 110, 253, 0.15); color: var(--ncs-blue-light); border: 1px solid rgba(13, 110, 253, 0.3); }
     .badge-danger { background: rgba(247, 90, 104, 0.15); color: #f75a68; border: 1px solid rgba(247, 90, 104, 0.3); }
     .badge-warning { background: rgba(255, 193, 7, 0.15); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.3); }
+
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        font-size: 13px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        margin: 0 2px;
+    }
+    .btn-edit {
+        background: rgba(13, 110, 253, 0.15);
+        color: var(--ncs-blue-light);
+        border: 1px solid rgba(13, 110, 253, 0.3);
+    }
+    .btn-edit:hover {
+        background: var(--ncs-blue);
+        color: white;
+    }
+    .btn-delete {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .btn-delete:hover {
+        background: #ef4444;
+        color: white;
+    }
 </style>
 {% endblock %}

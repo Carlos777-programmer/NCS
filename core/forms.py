@@ -1,6 +1,6 @@
 from django.contrib.auth.forms import AuthenticationForm
 from django import forms
-from .models import Cliente, Veiculo, OrdemServico
+from .models import Cliente, Veiculo, OrdemServico, Servico
 
 class LoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
@@ -46,4 +46,15 @@ class OrdemServicoForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-control'}),
             'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'observacoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Observações...'}),
+        }
+
+class ServicoForm(forms.ModelForm):
+    class Meta:
+        model = Servico
+        fields = ['nome', 'descricao', 'preco', 'custo_estimado']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'preco': forms.NumberInput(attrs={'class': 'form-control'}),
+            'custo_estimado': forms.NumberInput(attrs={'class': 'form-control'}),
         }

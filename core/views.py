@@ -1,8 +1,10 @@
 from django.contrib.auth.views import LoginView
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Cliente, Veiculo, OrdemServico
-from .forms import ClienteForm, VeiculoForm, LoginForm, OrdemServicoForm
+from django.urls import reverse_lazy
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from .models import Cliente, Veiculo, OrdemServico, Servico
+from .forms import ClienteForm, VeiculoForm, LoginForm, OrdemServicoForm, ServicoForm
 
 def login_view(request):
     return render(request, 'core/login.html')
@@ -48,10 +50,12 @@ def veiculo_create(request):
         form = VeiculoForm()
     return render(request, 'core/veiculo_form.html', {'form': form})
 
+@login_required
 def ordens_servico_list(request):
     ordens = OrdemServico.objects.all().order_by('-criado_em')
     return render(request, 'core/ordens_servico_list.html', {'ordens': ordens})
 
+@login_required
 def ordem_servico_create(request):
     if request.method == 'POST':
         form = OrdemServicoForm(request.POST)
@@ -61,3 +65,35 @@ def ordem_servico_create(request):
     else:
         form = OrdemServicoForm()
     return render(request, 'core/ordem_servico_form.html', {'form': form})
+
+class ServicoListView(ListView):
+    model = Servico
+    template_name = 'core/servico_list.html'
+
+class ServicoCreateView(CreateView):
+    model = Servico
+    form_class = ServicoForm
+    template_name = 'core/servico_form.html'
+    success_url = reverse_lazy('servicos_list')
+
+class ServicoUpdateView(UpdateView):
+    model = Servico
+    form_class = ServicoForm
+    template_name = 'core/servico_form.html'
+    success_url = reverse_lazy('servicos_list')
+
+class ServicoDeleteView(DeleteView):
+    model = Servico
+    template_name = 'core/servico_confirm_delete.html'
+    success_url = reverse_lazy('servicos_list')
+
+class OrdemServicoUpdateView(UpdateView):
+    model = OrdemServico
+    form_class = OrdemServicoForm
+    template_name = 'core/ordem_servico_form.html'
+    success_url = reverse_lazy('ordens_servico_list')
+
+class OrdemServicoDeleteView(DeleteView):
+    model = OrdemServico
+    template_name = 'core/ordem_servico_confirm_delete.html'
+    success_url = reverse_lazy('ordens_servico_list')

@@ -31,7 +31,7 @@ class Servico(models.Model):
 class OrdemServico(models.Model):
     STATUS_CHOICES = [
         ('PENDENTE', 'Pendente'),
-        ('EM_ANDAMENTO', 'Em Andamento'),
+        ('EM ANDAMENTO', 'Em Andamento'),
         ('CONCLUIDO', 'Concluído'),
         ('CANCELADO', 'Cancelado'),
     ]

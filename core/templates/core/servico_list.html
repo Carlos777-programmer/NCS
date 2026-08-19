@@ -1,0 +1,37 @@
+{% extends 'core/base.html' %}
+{% block title %}Serviços - NCS ERP{% endblock %}
+
+{% block content %}
+<div class="main-content">
+    <div class="topbar">
+        <h2>Catálogo de Serviços</h2>
+        <a href="{% url 'servico_create' %}" class="btn-primary"><i class="fa-solid fa-plus"></i> Novo Serviço</a>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Preço</th>
+                    <th>Custo Estimado</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for servico in object_list %}
+                <tr>
+                    <td>{{ servico.nome }}</td>
+                    <td>R$ {{ servico.preco }}</td>
+                    <td>R$ {{ servico.custo_estimado }}</td>
+                    <td>
+                        <a href="{% url 'servico_update' servico.pk %}" style="color: var(--ncs-blue-light); margin-right: 10px;"><i class="fa-solid fa-pen"></i></a>
+                        <a href="{% url 'servico_delete' servico.pk %}" style="color: #f75a68;"><i class="fa-solid fa-trash"></i></a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
