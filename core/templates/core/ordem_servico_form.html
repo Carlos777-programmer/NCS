@@ -1,6 +1,6 @@
 {% extends 'core/base.html' %}
 
-{% block title %}NCS ERP | Nova Ordem de Serviço{% endblock %}
+{% block title %}NCS ERP | Ordem de Serviço{% endblock %}
 {% block nav_ordens %}active{% endblock %}
 
 {% block content %}
@@ -9,59 +9,179 @@
         <div style="display: flex; align-items: center; gap: 15px;">
             <button class="btn-toggle" id="sidebarToggle" title="Esconder/Exibir Menu"><i class="fa-solid fa-bars"></i></button>
             <div>
-                <h1 style="margin: 0;">Nova Ordem de Serviço</h1>
-                <p style="margin: 5px 0 0 0; color: var(--text-muted);">Preencha os dados para abrir uma nova O.S.</p>
+                <h1 style="margin: 0; font-size: 22px; font-weight: 600; color: var(--text-main);">Gerenciar Ordem de Serviço</h1>
+                <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 13px;">Preencha os dados e selecione os serviços da O.S.</p>
             </div>
         </div>
         <a href="{% url 'ordens_servico_list' %}" class="btn-toggle" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px;"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
     </header>
 
-    <section class="table-container" style="max-width: 700px; margin: 0 auto; background: var(--panel-bg); border: 1px solid var(--borda); border-radius: 12px; padding: 35px;">
-        <form method="post" style="display: flex; flex-direction: column; gap: 20px;">
+    <section class="table-container" style="max-width: 750px; margin: 20px auto; background: var(--panel-bg); border: 1px solid var(--borda); border-radius: 14px; padding: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <form method="post" style="display: flex; flex-direction: column; gap: 24px;">
             {% csrf_token %}
             
             {% for field in form %}
             <div style="display: flex; flex-direction: column; gap: 8px;">
-                <label for="{{ field.id_for_label }}" style="color: var(--text-main); font-weight: 600; font-size: 14px;">{{ field.label }}</label>
+                <label for="{{ field.id_for_label }}" style="color: var(--text-main); font-weight: 500; font-size: 13px; letter-spacing: 0.3px; text-transform: uppercase;">
+                    {{ field.label }}
+                </label>
                 {{ field }}
                 {% if field.errors %}
-                    <span style="color: #f75a68; font-size: 12px;">{{ field.errors.0 }}</span>
+                    <span style="color: #f75a68; font-size: 12px; margin-top: -4px;"><i class="fa-solid fa-circle-exclamation"></i> {{ field.errors.0 }}</span>
                 {% endif %}
             </div>
+
+            {% if field.name == 'servicos' %}
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(13, 110, 253, 0.04); border: 1px solid rgba(13, 110, 253, 0.15); border-radius: 8px; margin-top: -12px;">
+                <span style="color: var(--text-muted); font-size: 13px;">Valor recomendado dos serviços:</span>
+                <strong id="total-servicos" style="color: #fff; font-size: 15px; font-weight: 600;">R$ 0,00</strong>
+            </div>
+            {% endif %}
             {% endfor %}
 
-            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
-                <a href="{% url 'ordens_servico_list' %}" class="btn-toggle" style="text-decoration: none; padding: 10px 20px; display: inline-flex; align-items: center; justify-content: center;">Cancelar</a>
-                <button type="submit" class="btn-primary" style="border: none; cursor: pointer; padding: 10px 20px; display: inline-flex; align-items: center; gap: 8px;"><i class="fa-solid fa-check"></i> Salvar O.S.</button>
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 20px;">
+                <a href="{% url 'ordens_servico_list' %}" class="btn-toggle" style="text-decoration: none; padding: 10px 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 14px;">Cancelar</a>
+                <button type="submit" class="btn-primary" style="border: none; cursor: pointer; padding: 10px 24px; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; font-size: 14px; font-weight: 500;"><i class="fa-solid fa-check"></i> Salvar O.S.</button>
             </div>
         </form>
     </section>
 </main>
 
+<script>
+    const servicosPrecos = {{ servicos_json|safe }};
+    const checkboxes = document.querySelectorAll('input[name="servicos"]');
+    const displayTotal = document.getElementById('total-servicos');
+    const inputValorTotal = document.getElementById('id_valor_total');
+
+    function calcularTotalServicos() {
+        let total = 0;
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                const servicoId = parseInt(cb.value);
+                const servico = servicosPrecos.find(s => s.id === servicoId);
+                if (servico) {
+                    total += parseFloat(servico.preco);
+                }
+            }
+        });
+        displayTotal.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
+        if (inputValorTotal && total > 0) {
+            inputValorTotal.value = total.toFixed(2);
+        }
+    }
+
+    checkboxes.forEach(cb => cb.addEventListener('change', calcularTotalServicos));
+    calcularTotalServicos();
+</script>
+
 <style>
-    /* Estilização alinhada ao tema escuro da NCS ERP */
-    .table-container input,
+    /* Estilização moderna da lista de checkboxes de serviços */
+    #id_servicos {
+        list-style: none;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-height: 260px;
+        overflow-y: auto;
+        background: rgba(4, 6, 11, 0.75);
+        border: 1px solid var(--borda);
+        border-radius: 10px;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.2) transparent;
+    }
+
+    #id_servicos::-webkit-scrollbar {
+        width: 6px;
+    }
+    #id_servicos::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    #id_servicos::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.15);
+        border-radius: 4px;
+    }
+    
+    #id_servicos li {
+        display: flex;
+        align-items: center;
+        padding: 12px 18px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        color: var(--text-main);
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.2s ease, border-left 0.2s ease;
+    }
+
+    #id_servicos li:last-child {
+        border-bottom: none;
+    }
+
+    #id_servicos li:hover {
+        background: rgba(255,255,255,0.04);
+    }
+
+    /* Destaque sutil para itens marcados (suporta navegadores modernos) */
+    #id_servicos li:has(input[type="checkbox"]:checked) {
+        background: rgba(13, 110, 253, 0.08);
+        border-left: 3px solid var(--ncs-blue, #0d6efd);
+    }
+
+    /* Caixa de seleção customizada e limpa */
+    input[type="checkbox"] {
+        appearance: none;
+        -webkit-appearance: none;
+        width: 18px !important;
+        height: 18px !important;
+        border: 1.5px solid var(--borda);
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.3);
+        margin-right: 14px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    input[type="checkbox"]:checked {
+        background-color: var(--ncs-blue, #0d6efd);
+        border-color: var(--ncs-blue, #0d6efd);
+    }
+
+    input[type="checkbox"]:checked::after {
+        content: "✔";
+        font-size: 10px;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    input[type="checkbox"]:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+    }
+
+    /* Reset geral para os demais inputs do formulário */
+    .table-container input:not([type="checkbox"]),
     .table-container select,
     .table-container textarea {
         width: 100%;
         padding: 12px 16px;
-        background: rgba(4, 6, 11, 0.7);
+        background: rgba(4, 6, 11, 0.6);
         border: 1px solid var(--borda);
         border-radius: 8px;
         color: var(--text-main);
         font-size: 14px;
         box-sizing: border-box;
-        outline: none;
-        transition: all 0.3s ease;
-        font-family: inherit;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .table-container input:focus,
+    .table-container input:not([type="checkbox"]):focus,
     .table-container select:focus,
     .table-container textarea:focus {
         border-color: var(--ncs-blue, #0d6efd);
-        box-shadow: 0 0 10px rgba(13, 110, 253, 0.3);
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2);
         background: rgba(4, 6, 11, 0.9);
+        outline: none;
     }
 
     .table-container select {

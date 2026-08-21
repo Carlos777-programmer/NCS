@@ -1,6 +1,6 @@
 from django.contrib.auth.forms import AuthenticationForm
 from django import forms
-from .models import Cliente, Veiculo, OrdemServico, Servico
+from .models import Cliente, Veiculo, OrdemServico, Servico, Agendamento
 
 class LoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
@@ -46,6 +46,7 @@ class OrdemServicoForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-control'}),
             'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'observacoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Observações...'}),
+            'servicos': forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
         }
 
 class ServicoForm(forms.ModelForm):
@@ -57,4 +58,16 @@ class ServicoForm(forms.ModelForm):
             'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'preco': forms.NumberInput(attrs={'class': 'form-control'}),
             'custo_estimado': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+
+class AgendamentoForm(forms.ModelForm):
+    class Meta:
+        model = Agendamento
+        fields = ['cliente', 'veiculo', 'data_hora', 'status', 'observacoes']
+        widgets = {
+            'cliente': forms.Select(attrs={'class': 'form-control'}),
+            'veiculo': forms.Select(attrs={'class': 'form-control'}),
+            'data_hora': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
+            'observacoes': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
         }

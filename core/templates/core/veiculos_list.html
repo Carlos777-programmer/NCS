@@ -31,7 +31,7 @@
                 <tr>
                     <td style="color: var(--text-main); font-weight: 600;">{{ veiculo.cliente.nome }}</td>
                     <td>{{ veiculo.marca }} {{ veiculo.modelo }}</td>
-                    <td style="color: var(--ncs-blue-light); font-weight: bold;">{{ veiculo.placa }}</td>
+                    <td style="color: var(--ncs-blue-light); font-weight: bold;">{{ veiculo.placa|upper }}</td>
                     <td>{{ veiculo.ano }}</td>
                 </tr>
                 {% empty %}

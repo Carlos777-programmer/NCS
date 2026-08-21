@@ -4,7 +4,8 @@ from . import views
 from .views import (
     CustomLoginView, dashboard, 
     clientes_list, cliente_create, 
-    veiculos_list, veiculo_create, 
+    veiculos_list, veiculo_create,
+    agendamento_create, agendamentos_list,
 )
 
 urlpatterns = [
@@ -23,4 +24,6 @@ urlpatterns = [
     path('servicos/novo/', views.ServicoCreateView.as_view(), name='servico_create'),
     path('servicos/<int:pk>/editar/', views.ServicoUpdateView.as_view(), name='servico_update'),
     path('servicos/<int:pk>/excluir/', views.ServicoDeleteView.as_view(), name='servico_delete'),
+    path('agendamentos/', agendamentos_list, name='agendamentos_list'),
+    path('agendamentos/novo/', agendamento_create, name='agendamento_create'),
 ]

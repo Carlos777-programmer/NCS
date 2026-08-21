@@ -45,9 +45,9 @@
                         </span>
                     </td>
                     <td style="color: var(--ncs-blue-light); font-weight: bold;">
-                        R$ {{ os.valor|default:"0,00" }}
+                        R$ {{ os.valor_total|default:"0,00" }}
                     </td>
-                    <td>{{ os.data_criacao|date:"d/m/Y H:i" }}</td>
+                    <td>{{ os.criado_em|date:"d/m/Y H:i" }}</td>
                     <td style="text-align: center;">
                         <a href="{% url 'ordem_servico_update' os.id %}" class="btn-action btn-edit" title="Editar O.S.">
                             <i class="fa-solid fa-pen-to-square"></i>
