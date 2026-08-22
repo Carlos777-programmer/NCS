@@ -2,6 +2,10 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+    <link rel="manifest" href="{% static 'core/manifest.json' %}">
+    <meta name="theme-color" content="#0d6efd">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}NCS ERP{% endblock %}</title>
@@ -236,7 +240,6 @@
         <a href="{% url 'veiculos_list' %}" class="nav-item {% block nav_veiculos %}{% endblock %}"><i class="fa-solid fa-car"></i> Veículos</a>
         <a href="{% url 'ordens_servico_list' %}" class="nav-item {% block nav_ordens %}{% endblock %}"><i class="fa-solid fa-clipboard-check"></i> Ordens de Serviço</a>
         <a href="{% url 'servicos_list' %}" class="nav-item {% block nav_servicos %}{% endblock %}"><i class="fa-solid fa-wrench"></i> Serviços</a>
-        <!-- ABA DE AGENDAMENTOS ADICIONADA -->
         <a href="{% url 'agendamentos_list' %}" class="nav-item {% block nav_agendamentos %}{% endblock %}"><i class="fa-solid fa-calendar-days"></i> Agendamentos</a>
         
         <div style="margin-top: auto;">
@@ -254,8 +257,11 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const toggleBtn = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+
             if (toggleBtn) {
-                toggleBtn.addEventListener('click', function() {
+                toggleBtn.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Evita fechar imediatamente ao clicar no botão
                     if (window.innerWidth <= 768) {
                         document.body.classList.toggle('sidebar-open');
                     } else {
@@ -263,7 +269,24 @@
                     }
                 });
             }
+
+            // Fecha a sidebar ao clicar fora dela no celular
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth <= 768 && document.body.classList.contains('sidebar-open')) {
+                    if (sidebar && !sidebar.contains(event.target) && toggleBtn && !toggleBtn.contains(event.target)) {
+                        document.body.classList.remove('sidebar-open');
+                    }
+                }
+            });
         });
+    </script>
+
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('{% static "core/sw.js" %}')
+          .then(() => console.log('Service Worker registrado com sucesso!'))
+          .catch((err) => console.log('Erro ao registrar Service Worker:', err));
+      }
     </script>
 </body>
 </html>

@@ -6,9 +6,12 @@
 {% block content %}
 <main class="main-content">
     <header class="topbar">
-        <div>
-            <h1 style="margin: 0; font-size: 22px;">Agendamentos</h1>
-            <p style="margin: 5px 0 0 0; color: var(--text-muted);">Gerencie a agenda da oficina.</p>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button class="btn-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+            <div>
+                <h1 style="margin: 0; font-size: 22px;">Agendamentos</h1>
+                <p style="margin: 5px 0 0 0; color: var(--text-muted);">Gerencie a agenda da oficina.</p>
+            </div>
         </div>
         <a href="{% url 'agendamento_create' %}" class="btn-primary"><i class="fa-solid fa-plus"></i> Novo Agendamento</a>
     </header>

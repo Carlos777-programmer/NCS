@@ -1,14 +1,21 @@
 {% extends 'core/base.html' %}
 {% block title %}Serviços - NCS ERP{% endblock %}
+{% block nav_servicos %}active{% endblock %}
 
 {% block content %}
-<div class="main-content">
-    <div class="topbar">
-        <h2>Catálogo de Serviços</h2>
+<main class="main-content">
+    <header class="topbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button class="btn-toggle" id="sidebarToggle"><i class="fa-solid fa-bars"></i></button>
+            <div>
+                <h1 style="margin: 0; font-size: 22px;">Catálogo de Serviços</h1>
+                <p style="margin: 5px 0 0 0; color: var(--text-muted);">Gerencie os serviços oferecidos.</p>
+            </div>
+        </div>
         <a href="{% url 'servico_create' %}" class="btn-primary"><i class="fa-solid fa-plus"></i> Novo Serviço</a>
-    </div>
+    </header>
 
-    <div class="table-container">
+    <section class="table-container">
         <table>
             <thead>
                 <tr>
@@ -29,9 +36,13 @@
                         <a href="{% url 'servico_delete' servico.pk %}" style="color: #f75a68;"><i class="fa-solid fa-trash"></i></a>
                     </td>
                 </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted);">Nenhum serviço cadastrado.</td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
-    </div>
-</div>
+    </section>
+</main>
 {% endblock %}
