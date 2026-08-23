@@ -7,8 +7,9 @@ from django.utils import timezone
 from django.db.models import Sum
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.core.serializers.json import DjangoJSONEncoder
-from .models import Cliente, Veiculo, OrdemServico, Servico, Agendamento
-from .forms import ClienteForm, VeiculoForm, LoginForm, OrdemServicoForm, ServicoForm, AgendamentoForm
+from datetime import datetime
+from .models import Cliente, Veiculo, OrdemServico, Servico, Agendamento, Gasto
+from .forms import ClienteForm, VeiculoForm, LoginForm, OrdemServicoForm, ServicoForm, AgendamentoForm, GastoForm
 
 def login_view(request):
     return render(request, 'core/login.html')
@@ -158,3 +159,85 @@ def agendamento_create(request):
     else:
         form = AgendamentoForm()
     return render(request, 'core/agendamento_form.html', {'form': form})
+
+
+@login_required
+def gastos_list(request):
+    hoje = datetime.today()
+    
+    tipo_filtro = request.GET.get('tipo', 'mes')
+    mes_param = request.GET.get('mes', str(hoje.month).zfill(2))
+    trimestre_param = request.GET.get('trimestre', '1')
+    semana_param = request.GET.get('semana', str(hoje.isocalendar()[1]))
+    ano_param = request.GET.get('ano', str(hoje.year))
+
+    try:
+        ano = int(ano_param)
+    except ValueError:
+        ano = hoje.year
+
+    gastos = Gasto.objects.all().order_by('-data')
+
+    if tipo_filtro == 'mes':
+        try:
+            mes = int(mes_param)
+        except ValueError:
+            mes = hoje.month
+        gastos = gastos.filter(data__year=ano, data__month=mes)
+        
+    elif tipo_filtro == 'trimestre':
+        try:
+            trimestre = int(trimestre_param)
+        except ValueError:
+            trimestre = 1
+        
+        meses_map = {1: [1, 2, 3], 2: [4, 5, 6], 3: [7, 8, 9], 4: [10, 11, 12]}
+        meses = meses_map.get(trimestre, [1, 2, 3])
+        gastos = gastos.filter(data__year=ano, data__month__in=meses)
+        
+    elif tipo_filtro == 'semanal':
+        try:
+            semana = int(semana_param)
+        except ValueError:
+            semana = hoje.isocalendar()[1]
+        gastos = gastos.filter(data__year=ano, data__week=semana)
+        
+    elif tipo_filtro == 'ano':
+        gastos = gastos.filter(data__year=ano)
+        
+    else:  # 'tudo'
+        tipo_filtro = 'tudo'
+
+    total_filtrado = gastos.aggregate(total=Sum('valor'))['total'] or 0
+    total_ano = Gasto.objects.filter(data__year=ano).aggregate(total=Sum('valor'))['total'] or 0
+
+    context = {
+        'gastos': gastos,
+        'total_filtrado': total_filtrado,
+        'total_ano': total_ano,
+        'tipo_filtro': tipo_filtro,
+        'mes_atual': str(mes_param).zfill(2),
+        'trimestre_atual': str(trimestre_param),
+        'semana_atual': str(semana_param),
+        'ano_atual': str(ano),
+    }
+    return render(request, 'core/gastos_list.html', context)
+
+@login_required
+def gasto_create(request):
+    if request.method == 'POST':
+        form = GastoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('gastos_list')
+    else:
+        form = GastoForm()
+    return render(request, 'core/gasto_form.html', {'form': form})
+
+@login_required
+def gasto_delete(request, pk):
+    gasto = get_object_or_404(Gasto, pk=pk)
+    if request.method == 'POST':
+        gasto.delete()
+        return redirect('gastos_list')
+    return render(request, 'core/gasto_confirm_delete.html', {'gasto': gasto})

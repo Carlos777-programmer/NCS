@@ -1,6 +1,6 @@
 from django.contrib.auth.forms import AuthenticationForm
 from django import forms
-from .models import Cliente, Veiculo, OrdemServico, Servico, Agendamento
+from .models import Cliente, Veiculo, OrdemServico, Servico, Agendamento, Gasto
 
 class LoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
@@ -70,4 +70,16 @@ class AgendamentoForm(forms.ModelForm):
             'data_hora': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
             'observacoes': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+        }
+
+class GastoForm(forms.ModelForm):
+    class Meta:
+        model = Gasto
+        fields = ['descricao', 'valor', 'data', 'categoria', 'observacoes']
+        widgets = {
+            'data': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'descricao': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Peças, Água, Luz...'}),
+            'valor': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': '0.00'}),
+            'categoria': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Operacional, Fixos...'}),
+            'observacoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }

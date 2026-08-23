@@ -26,4 +26,7 @@ urlpatterns = [
     path('servicos/<int:pk>/excluir/', views.ServicoDeleteView.as_view(), name='servico_delete'),
     path('agendamentos/', agendamentos_list, name='agendamentos_list'),
     path('agendamentos/novo/', agendamento_create, name='agendamento_create'),
+    path('gastos/', views.gastos_list, name='gastos_list'),
+    path('gastos/novo/', views.gasto_create, name='gasto_create'),
+    path('gastos/deletar/<int:pk>/', views.gasto_delete, name='gasto_delete'),
 ]

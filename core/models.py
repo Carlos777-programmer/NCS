@@ -64,3 +64,13 @@ class Agendamento(models.Model):
 
     def __str__(self):
         return f"{self.cliente.nome} - {self.data_hora.strftime('%d/%m/%Y %H:%M')}"
+    
+class Gasto(models.Model):
+    descricao = models.CharField(max_length=200, verbose_name="Descrição")
+    valor = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor (R$)")
+    data = models.DateField(verbose_name="Data do Gasto")
+    categoria = models.CharField(max_length=100, blank=True, null=True, verbose_name="Categoria")
+    observacoes = models.TextField(blank=True, null=True, verbose_name="Observações")
+
+    def __str__(self):
+        return f"{self.descricao} - R$ {self.valor} ({self.data.strftime('%d/%m/%Y')})"

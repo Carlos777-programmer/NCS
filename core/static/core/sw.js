@@ -1,4 +1,7 @@
-self.addEventListener('fetch', function(event) {
-  // Permite que o app funcione normalmente conectando ao servidor
-  event.respondWith(fetch(event.request));
-});
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('{% static "core/sw.js" %}')
+      .then(() => console.log('Service Worker registrado no login!'))
+      .catch((err) => console.log('Erro:', err))
+  }
+</script>
