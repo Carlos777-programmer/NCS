@@ -4,7 +4,6 @@
 {% block nav_dashboard %}active{% endblock %}
 
 {% block content %}
-<main class="main-content">
     <header class="topbar">
         <div style="display: flex; align-items: center; gap: 15px;">
             <button class="btn-toggle" id="sidebarToggle" title="Esconder/Exibir Menu"><i class="fa-solid fa-bars"></i></button>
@@ -15,19 +14,28 @@
         </div>
     </header>
 
-    <!-- CARDS DE ESTATÍSTICAS DINÂMICAS -->
+    <!-- CARDS DE ESTATÍSTICAS COM CORES E IDENTIDADE VISUAL -->
     <section class="stats-grid">
-        <div class="stat-card">
-            <h3>Em Execução</h3>
-            <p>{{ em_execucao }}</p>
+        <div class="stat-card stat-execution">
+            <div class="stat-icon"><i class="fa-solid fa-gears"></i></div>
+            <div>
+                <h3>Em Execução</h3>
+                <p>{{ em_execucao }}</p>
+            </div>
         </div>
-        <div class="stat-card">
-            <h3>Concluídos Hoje</h3>
-            <p>{{ concluidos_hoje }}</p>
+        <div class="stat-card stat-completed">
+            <div class="stat-icon"><i class="fa-solid fa-circle-check"></i></div>
+            <div>
+                <h3>Concluídos Hoje</h3>
+                <p>{{ concluidos_hoje }}</p>
+            </div>
         </div>
-        <div class="stat-card">
-            <h3>Faturamento Mensal</h3>
-            <p>R$ {{ faturamento_mensal|floatformat:2 }}</p>
+        <div class="stat-card stat-revenue">
+            <div class="stat-icon"><i class="fa-solid fa-wallet"></i></div>
+            <div>
+                <h3>Faturamento Mensal</h3>
+                <p>R$ {{ faturamento_mensal|floatformat:2 }}</p>
+            </div>
         </div>
     </section>
 
@@ -47,13 +55,23 @@
                 {% for os in recentes_os %}
                 <tr>
                     <td style="color: var(--text-main); font-weight: 600;">{{ os.cliente.nome }}</td>
-                    <td>{{ os.veiculo|default:"-" }}</td>
                     <td>
-                        <span class="status-badge status-{{ os.status }}">
+                        {% if os.veiculo %}
+                            {% if os.veiculo.placa %}
+                                {{ os.veiculo.marca|default:"" }} {{ os.veiculo.modelo|default:"" }} 
+                                <span class="plate-badge">{{ os.veiculo.placa|upper }}</span>
+                            {% else %}
+                                {{ os.veiculo }}
+                            {% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ os.status|lower|slugify }}">
                             {{ os.get_status_display }}
                         </span>
                     </td>
-                    <!-- CORRIGIDO DE os.valor PARA os.valor_total -->
                     <td>R$ {{ os.valor_total|floatformat:2 }}</td>
                 </tr>
                 {% empty %}
@@ -66,50 +84,118 @@
             </tbody>
         </table>
     </section>
-</main>
 
-<style>
-    /* Estilos dos Cards de Estatísticas */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
-    }
-    
-    .stat-card {
-        background: var(--panel-bg);
-        border: 1px solid var(--borda);
-        padding: 24px;
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    }
-    
-    .stat-card h3 {
-        margin: 0;
-        font-size: 12px;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .stat-card p {
-        margin: 10px 0 0 0;
-        font-size: 28px;
-        font-weight: 700;
-        color: var(--text-main);
-    }
+    <style>
+        /* Estilos dos Cards de Estatísticas Modernos */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--borda);
+            padding: 24px;
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
 
-    /* Badges de Status na Tabela */
-    .status-badge {
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-    .status-em_andamento { background: rgba(13, 110, 253, 0.1); color: var(--ncs-blue-light); }
-    .status-concluido { background: rgba(4, 211, 97, 0.1); color: #04d361; }
-    .status-pendente { background: rgba(255, 193, 7, 0.1); color: #ffc107; }
-</style>
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+
+        /* Faixa de destaque lateral em cada card */
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+        }
+
+        .stat-execution::before { background: #0d6efd; }
+        .stat-completed::before { background: #04d361; }
+        .stat-revenue::before { background: #ffc107; }
+
+        /* Caixa de Ícone */
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .stat-execution .stat-icon {
+            background: rgba(13, 110, 253, 0.12);
+            color: #0d6efd;
+        }
+        .stat-completed .stat-icon {
+            background: rgba(4, 211, 97, 0.12);
+            color: #04d361;
+        }
+        .stat-revenue .stat-icon {
+            background: rgba(255, 193, 7, 0.12);
+            color: #ffc107;
+        }
+        
+        .stat-card h3 {
+            margin: 0;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        
+        .stat-card p {
+            margin: 6px 0 0 0;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Badges de Status na Tabela */
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            display: inline-block;
+        }
+        .status-em-andamento { background: rgba(13, 110, 253, 0.12); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); }
+        .status-concluido { background: rgba(4, 211, 97, 0.12); color: #04d361; border: 1px solid rgba(4, 211, 97, 0.2); }
+        .status-pendente { background: rgba(255, 193, 7, 0.12); color: #ffc107; border: 1px solid rgba(255, 193, 7, 0.2); }
+        .status-cancelado { background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+        /* Badge da Placa do Veículo */
+        .plate-badge {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--borda);
+            color: var(--text-main);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: monospace;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-left: 6px;
+            display: inline-block;
+            text-transform: uppercase;
+        }
+    </style>
 {% endblock %}

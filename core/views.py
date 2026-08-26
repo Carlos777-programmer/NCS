@@ -1,5 +1,7 @@
 import json
+from django.http import JsonResponse
 from django.contrib.auth.views import LoginView
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
@@ -68,6 +70,26 @@ def cliente_create(request):
     return render(request, 'core/cliente_form.html', {'form': form})
 
 @login_required
+def cliente_update(request, pk):
+    cliente = get_object_or_404(Cliente, pk=pk)
+    if request.method == 'POST':
+        form = ClienteForm(request.POST, instance=cliente)
+        if form.is_valid():
+            form.save()
+            return redirect('clientes_list')
+    else:
+        form = ClienteForm(instance=cliente)
+    return render(request, 'core/cliente_form.html', {'form': form, 'editando': True})
+
+@login_required
+def cliente_delete(request, pk):
+    cliente = get_object_or_404(Cliente, pk=pk)
+    if request.method == 'POST':
+        cliente.delete()
+        return redirect('clientes_list')
+    return render(request, 'core/cliente_confirm_delete.html', {'cliente': cliente})
+
+@login_required
 def veiculos_list(request):
     veiculos = Veiculo.objects.all().select_related('cliente').order_by('-id')
     return render(request, 'core/veiculos_list.html', {'veiculos': veiculos})
@@ -82,6 +104,32 @@ def veiculo_create(request):
     else:
         form = VeiculoForm()
     return render(request, 'core/veiculo_form.html', {'form': form})
+
+@login_required
+def veiculo_update(request, pk):
+    veiculo = get_object_or_404(Veiculo, pk=pk)
+    if request.method == 'POST':
+        form = VeiculoForm(request.POST, instance=veiculo)
+        if form.is_valid():
+            form.save()
+            return redirect('veiculos_list')
+    else:
+        form = VeiculoForm(instance=veiculo)
+    return render(request, 'core/veiculo_form.html', {'form': form, 'editando': True})
+
+@login_required
+def veiculo_delete(request, pk):
+    veiculo = get_object_or_404(Veiculo, pk=pk)
+    if request.method == 'POST':
+        veiculo.delete()
+        return redirect('veiculos_list')
+    return render(request, 'core/veiculo_confirm_delete.html', {'veiculo': veiculo})
+
+@login_required
+def load_veiculos(request):
+    cliente_id = request.GET.get('cliente_id')
+    veiculos = Veiculo.objects.filter(cliente_id=cliente_id).values('id', 'marca', 'modelo', 'placa')
+    return JsonResponse(list(veiculos), safe=False)
 
 @login_required
 def ordens_servico_list(request):
@@ -106,50 +154,56 @@ def ordem_servico_create(request):
         {'form': form, 'servicos_json': servicos_json},
     )
 
-class ServicoListView(ListView):
+class ServicoListView(LoginRequiredMixin, ListView):
     model = Servico
     template_name = 'core/servico_list.html'
 
-class ServicoCreateView(CreateView):
+class ServicoCreateView(LoginRequiredMixin, CreateView):
     model = Servico
     form_class = ServicoForm
     template_name = 'core/servico_form.html'
     success_url = reverse_lazy('servicos_list')
 
-class ServicoUpdateView(UpdateView):
+class ServicoUpdateView(LoginRequiredMixin, UpdateView):
     model = Servico
     form_class = ServicoForm
     template_name = 'core/servico_form.html'
     success_url = reverse_lazy('servicos_list')
 
-class ServicoDeleteView(DeleteView):
+class ServicoDeleteView(LoginRequiredMixin, DeleteView):
     model = Servico
     template_name = 'core/servico_confirm_delete.html'
     success_url = reverse_lazy('servicos_list')
 
-class OrdemServicoUpdateView(UpdateView):
-  model = OrdemServico
-  form_class = OrdemServicoForm
-  template_name = 'core/ordem_servico_form.html'
-  success_url = reverse_lazy('ordens_servico_list')
-
-  def get_context_data(self, **kwargs):
-    context = super().get_context_data(**kwargs)
-    servicos_precos = list(Servico.objects.values('id', 'preco'))
-    context['servicos_json'] = json.dumps(
-        servicos_precos, cls=DjangoJSONEncoder
-    )
-    return context
-
-class OrdemServicoDeleteView(DeleteView):
+class OrdemServicoUpdateView(LoginRequiredMixin, UpdateView):
     model = OrdemServico
-    template_name = 'core/ordem_servico_confirm_delete.html'
+    form_class = OrdemServicoForm
+    template_name = 'core/ordem_servico_form.html'
     success_url = reverse_lazy('ordens_servico_list')
 
-def agendamentos_list(view_func):
-    agendamentos = Agendamento.objects.all().order_by('data_hora')
-    return render(view_func, 'core/agendamento_list.html', {'agendamentos': agendamentos})
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        servicos_precos = list(Servico.objects.values('id', 'preco'))
+        context['servicos_json'] = json.dumps(
+            servicos_precos, cls=DjangoJSONEncoder
+        )
+        return context
 
+class OrdemServicoDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = OrdemServico
+    template_name = 'core\ordem_servico_confirm_delete.html'  # o caminho do seu template
+    success_url = reverse_lazy('ordens_servico_list')
+
+    def test_func(self):
+        # Opcional: Garante que apenas usuários específicos ou staff podem excluir
+        return self.request.user.is_staff
+
+@login_required
+def agendamentos_list(request):
+    agendamentos = Agendamento.objects.all().order_by('data_hora')
+    return render(request, 'core/agendamento_list.html', {'agendamentos': agendamentos})
+
+@login_required
 def agendamento_create(request):
     if request.method == 'POST':
         form = AgendamentoForm(request.POST)
@@ -160,6 +214,25 @@ def agendamento_create(request):
         form = AgendamentoForm()
     return render(request, 'core/agendamento_form.html', {'form': form})
 
+@login_required
+def agendamento_update(request, pk):
+    agendamento = get_object_or_404(Agendamento, pk=pk)
+    if request.method == 'POST':
+        form = AgendamentoForm(request.POST, instance=agendamento)
+        if form.is_valid():
+            form.save()
+            return redirect('agendamentos_list')
+    else:
+        form = AgendamentoForm(instance=agendamento)
+    return render(request, 'core/agendamento_form.html', {'form': form, 'editando': True})
+
+@login_required
+def agendamento_delete(request, pk):
+    agendamento = get_object_or_404(Agendamento, pk=pk)
+    if request.method == 'POST':
+        agendamento.delete()
+        return redirect('agendamentos_list')
+    return render(request, 'core/agendamento_confirm_delete.html', {'agendamento': agendamento})
 
 @login_required
 def gastos_list(request):

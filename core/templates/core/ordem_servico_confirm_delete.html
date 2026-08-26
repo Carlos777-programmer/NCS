@@ -97,6 +97,17 @@
         }
     </style>
 </head>
+<script>
+    document.querySelector('form').addEventListener('submit', function() {
+        const btnDelete = document.querySelector('.btn-delete');
+        if (btnDelete) {
+            btnDelete.disabled = true;
+            btnDelete.style.opacity = '0.8';
+            btnDelete.style.cursor = 'wait';
+            btnDelete.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Removendo O.S...';
+        }
+    });
+</script>
 <body>
 
     <div class="form-card">

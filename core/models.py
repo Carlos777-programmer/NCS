@@ -10,14 +10,14 @@ class Cliente(models.Model):
         return self.nome
 
 class Veiculo(models.Model):
-    cliente = models.ForeignKey(Cliente, related_name='veiculos', on_delete=models.CASCADE)
-    marca = models.CharField(max_length=50)
-    modelo = models.CharField(max_length=50)
-    placa = models.CharField(max_length=10, unique=True)
-    ano = models.PositiveIntegerField()
+    cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
+    marca = models.CharField(max_length=50, blank=True, null=True, default="Não especificado")
+    modelo = models.CharField(max_length=50, blank=True, null=True, default="Não especificado")
+    placa = models.CharField(max_length=10, blank=True, null=True, default="Não informada")
+    ano = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.modelo} - {self.placa.upper()}"
+        return f"{self.marca} {self.modelo} ({self.placa})"
 
 class Servico(models.Model):
     nome = models.CharField(max_length=100)

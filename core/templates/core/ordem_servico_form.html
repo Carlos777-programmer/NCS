@@ -48,30 +48,98 @@
 </main>
 
 <script>
-    const servicosPrecos = {{ servicos_json|safe }};
-    const checkboxes = document.querySelectorAll('input[name="servicos"]');
-    const displayTotal = document.getElementById('total-servicos');
-    const inputValorTotal = document.getElementById('id_valor_total');
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- 1. LÓGICA DE CÁLCULO DE SERVIÇOS (Apenas exibe a sugestão, sem alterar o input) ---
+        const servicosPrecos = {{ servicos_json|safe }};
+        const checkboxes = document.querySelectorAll('input[name="servicos"]');
+        const displayTotal = document.getElementById('total-servicos');
 
-    function calcularTotalServicos() {
-        let total = 0;
-        checkboxes.forEach(cb => {
-            if (cb.checked) {
-                const servicoId = parseInt(cb.value);
-                const servico = servicosPrecos.find(s => s.id === servicoId);
-                if (servico) {
-                    total += parseFloat(servico.preco);
+        function calcularTotalServicos() {
+            let total = 0;
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    const servicoId = parseInt(cb.value);
+                    const servico = servicosPrecos.find(s => s.id === servicoId);
+                    if (servico) {
+                        total += parseFloat(servico.preco);
+                    }
+                }
+            });
+            if (displayTotal) {
+                displayTotal.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
+            }
+            // A linha que alterava o inputValorTotal foi removida daqui, 
+            // então agora o campo fica livre para você digitar o valor que quiser!
+        }
+
+        checkboxes.forEach(cb => cb.addEventListener('change', calcularTotalServicos));
+        calcularTotalServicos();
+
+
+        // --- 2. LÓGICA AJAX PARA FILTRAR VEÍCULOS POR CLIENTE ---
+        const clienteSelect = document.querySelector('#id_cliente');
+        const veiculoSelect = document.querySelector('#id_veiculo');
+
+        if (clienteSelect && veiculoSelect) {
+            function atualizarVeiculos(clienteId, veiculoSelecionadoId = null) {
+                veiculoSelect.innerHTML = '<option value="">Carregando veículos...</option>';
+                
+                if (clienteId) {
+                    fetch(`{% url 'ajax_load_veiculos' %}?cliente_id=${clienteId}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Erro na resposta do servidor.');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            veiculoSelect.innerHTML = '<option value="">---------</option>';
+                            
+                            if (data.length === 0) {
+                                const option = document.createElement('option');
+                                option.value = "";
+                                option.textContent = "Este cliente não possui veículos cadastrados";
+                                option.disabled = true;
+                                veiculoSelect.appendChild(option);
+                            } else {
+                                data.forEach(veiculo => {
+                                    const option = document.createElement('option');
+                                    option.value = veiculo.id;
+                                    const marcaModelo = `${veiculo.marca || ''} ${veiculo.modelo || ''}`.trim();
+                                    const placa = veiculo.placa ? ` - Placa: ${veiculo.placa}` : '';
+                                    option.textContent = `${marcaModelo}${placa}`;
+                                    
+                                    if (veiculoSelecionadoId && veiculo.id == veiculoSelecionadoId) {
+                                        option.selected = true;
+                                    }
+                                    
+                                    veiculoSelect.appendChild(option);
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro ao buscar veículos:', error);
+                            veiculoSelect.innerHTML = '<option value="">Erro ao carregar veículos</option>';
+                        });
+                } else {
+                    veiculoSelect.innerHTML = '<option value="">Selecione um cliente primeiro</option>';
                 }
             }
-        });
-        displayTotal.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
-        if (inputValorTotal && total > 0) {
-            inputValorTotal.value = total.toFixed(2);
-        }
-    }
 
-    checkboxes.forEach(cb => cb.addEventListener('change', calcularTotalServicos));
-    calcularTotalServicos();
+            const clienteInicial = clienteSelect.value;
+            const veiculoAtual = veiculoSelect.value;
+            if (clienteInicial) {
+                atualizarVeiculos(clienteInicial, veiculoAtual);
+            } else { 
+                veiculoSelect.innerHTML = '<option value="">Selecione um cliente primeiro</option>';
+            }
+
+            clienteSelect.addEventListener('change', function() {
+                const clienteId = this.value;
+                atualizarVeiculos(clienteId);
+            });
+        }
+    });
 </script>
 
 <style>

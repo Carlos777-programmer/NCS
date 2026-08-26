@@ -3,7 +3,6 @@
 {% block nav_gastos %}active{% endblock %}
 
 {% block content %}
-<div class="main-content">
     <div class="topbar">
         <h2>Registrar Novo Gasto</h2>
         <a href="{% url 'gastos_list' %}" class="btn-toggle" style="text-decoration: none;"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
@@ -60,10 +59,16 @@
             </div>
         </form>
     </div>
-</div>
 
 <style>
-    /* Garantia de estilização fluida para os widgets do form */
+    /* Garantia de estilização fluida para todos os inputs e selects do Django */
+    input[type="text"], 
+    input[type="number"], 
+    input[type="date"], 
+    input[type="email"], 
+    input[type="password"], 
+    select, 
+    textarea,
     .form-control {
         width: 100%;
         background: var(--bg-dark);
@@ -75,11 +80,20 @@
         font-size: 14px;
         transition: border-color 0.3s;
     }
+    
+    input[type="text"]:focus, 
+    input[type="number"]:focus, 
+    input[type="date"]:focus, 
+    input[type="email"]:focus, 
+    input[type="password"]:focus, 
+    select:focus, 
+    textarea:focus,
     .form-control:focus {
         outline: none;
         border-color: var(--ncs-blue);
     }
-    textarea.form-control {
+    
+    textarea {
         resize: vertical;
         min-height: 90px;
     }

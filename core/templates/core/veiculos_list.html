@@ -24,19 +24,38 @@
                     <th>Marca / Modelo</th>
                     <th>Placa</th>
                     <th>Ano</th>
+                    <th style="text-align: center;">Ações</th>
                 </tr>
             </thead>
             <tbody>
                 {% for veiculo in veiculos %}
                 <tr>
                     <td style="color: var(--text-main); font-weight: 600;">{{ veiculo.cliente.nome }}</td>
-                    <td>{{ veiculo.marca }} {{ veiculo.modelo }}</td>
-                    <td style="color: var(--ncs-blue-light); font-weight: bold;">{{ veiculo.placa|upper }}</td>
-                    <td>{{ veiculo.ano }}</td>
+                    <td>
+                        {% if veiculo.marca or veiculo.modelo %}
+                            {{ veiculo.marca|default:"" }} {{ veiculo.modelo|default:"" }}
+                        {% else %}
+                            <span style="color: var(--text-muted); font-style: italic;">Não especificado</span>
+                        {% endif %}
+                    </td>
+                    <td style="color: var(--ncs-blue-light); font-weight: bold;">
+                        {{ veiculo.placa|default:"Sem Placa"|upper }}
+                    </td>
+                    <td>{{ veiculo.ano|default:"-" }}</td>
+                    <td style="text-align: center; white-space: nowrap;">
+                        <!-- Botão de Editar -->
+                        <a href="{% url 'veiculo_update' veiculo.pk %}" class="btn-action" title="Editar Veículo" style="color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 6px 10px; border-radius: 6px; text-decoration: none; margin-right: 5px; display: inline-block; transition: all 0.2s;">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>
+                        <!-- Botão de Excluir -->
+                        <a href="{% url 'veiculo_delete' veiculo.pk %}" class="btn-action" title="Excluir Veículo" style="color: #f75a68; background: rgba(247, 90, 104, 0.1); padding: 6px 10px; border-radius: 6px; text-decoration: none; display: inline-block; transition: all 0.2s;" onclick="return confirm('Tem certeza que deseja excluir este veículo?');">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </a>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
                         <i class="fa-solid fa-car" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
                         Nenhum veículo cadastrado ainda.
                     </td>
@@ -46,4 +65,11 @@
         </table>
     </section>
 </main>
+
+<style>
+    .btn-action:hover {
+        filter: brightness(1.2);
+        transform: translateY(-1px);
+    }
+</style>
 {% endblock %}

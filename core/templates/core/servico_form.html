@@ -123,7 +123,7 @@
         </h2>
         <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 14px;">Preencha os dados abaixo para cadastrar o serviço no catálogo.</p>
 
-        <form method="POST">
+        <form method="POST" id="servicoForm">
             {% csrf_token %}
             {% for field in form %}
                 <div class="form-group">

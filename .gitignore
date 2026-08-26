@@ -1,14 +1,53 @@
-# Python / Django
-*.pyc
+# --- Python ---
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# --- Ambiente Virtual ---
+venv/
+env/
+.venv/
+
+# --- Banco de Dados Local ---
+*.sqlite3
 db.sqlite3
+
+# --- Variáveis de Ambiente e Segredos (CRUCIAL PARA PRODUÇÃO) ---
+.env
+secrets.json
+
+# --- Arquivos de Mídia e Estáticos Gerados ---
 media/
 staticfiles/
 
-# Ambiente Virtual
-venv/
-env/
-ENV/
-
-# VS Code
+# --- IDEs e Editores ---
+.idea/
 .vscode/
+*.swp
+*.swo
+
+# --- Arquivos do Sistema Operacional ---
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log

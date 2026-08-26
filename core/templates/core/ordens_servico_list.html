@@ -34,14 +34,19 @@
                 <tr>
                     <td style="color: var(--text-main); font-weight: bold;">#{{ os.id }}</td>
                     <td style="color: var(--text-main); font-weight: 600;">{{ os.cliente.nome }}</td>
-                    <td>{{ os.veiculo.marca }} {{ os.veiculo.modelo }} ({{ os.veiculo.placa }})</td>
                     <td>
+                        {{ os.veiculo.marca }} {{ os.veiculo.modelo }}
+                        {% if os.veiculo.placa %}
+                        <span class="badge-placa">{{ os.veiculo.placa|upper }}</span>
+                        {% endif %}
+                    </td>
+                        <td>
                         <span class="badge-status 
-                            {% if os.status == 'Concluído' %}badge-success
-                            {% elif os.status == 'Em Andamento' %}badge-info
-                            {% elif os.status == 'Cancelado' %}badge-danger
+                            {% if os.status == 'CONCLUIDO' %}badge-success
+                            {% elif os.status == 'EM ANDAMENTO' %}badge-info
+                            {% elif os.status == 'CANCELADO' %}badge-danger
                             {% else %}badge-warning{% endif %}">
-                            {{ os.status }}
+                                {{ os.get_status_display }}
                         </span>
                     </td>
                     <td style="color: var(--ncs-blue-light); font-weight: bold;">
@@ -71,6 +76,20 @@
 </main>
 
 <style>
+    .badge-placa {
+        display: inline-block;
+        padding: 2px 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--borda);
+        border-radius: 4px;
+        font-size: 11px;
+        font-family: monospace;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-left: 6px;
+        letter-spacing: 0.5px;
+    }
+
     .badge-status {
         padding: 6px 12px;
         border-radius: 6px;

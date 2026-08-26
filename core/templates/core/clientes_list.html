@@ -4,7 +4,6 @@
 {% block nav_clientes %}active{% endblock %}
 
 {% block content %}
-<main class="main-content">
     <header class="topbar">
         <div style="display: flex; align-items: center; gap: 15px;">
             <button class="btn-toggle" id="sidebarToggle" title="Esconder/Exibir Menu"><i class="fa-solid fa-bars"></i></button>
@@ -15,6 +14,7 @@
         </div>
         <a href="{% url 'cliente_create' %}" class="btn-primary"><i class="fa-solid fa-user-plus"></i> Novo Cliente</a>
     </header>
+
     <section class="table-container">
         <table>
             <thead>
@@ -23,6 +23,7 @@
                     <th>Telefone</th>
                     <th>E-mail</th>
                     <th>Cadastrado em</th>
+                    <th style="text-align: center;">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -32,10 +33,20 @@
                     <td>{{ cliente.telefone }}</td>
                     <td>{{ cliente.email|default:"-" }}</td>
                     <td>{{ cliente.criado_em|date:"d/m/Y H:i" }}</td>
+                    <td style="text-align: center; white-space: nowrap;">
+                        <!-- Botão de Editar -->
+                        <a href="{% url 'cliente_update' cliente.pk %}" class="btn-action btn-edit" title="Editar Cliente" style="color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 6px 10px; border-radius: 6px; text-decoration: none; margin-right: 5px; display: inline-block; transition: all 0.2s;">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>
+                        <!-- Botão de Excluir -->
+                        <a href="{% url 'cliente_delete' cliente.pk %}" class="btn-action btn-delete" title="Excluir Cliente" style="color: #f75a68; background: rgba(247, 90, 104, 0.1); padding: 6px 10px; border-radius: 6px; text-decoration: none; display: inline-block; transition: all 0.2s;" onclick="return confirm('Tem certeza que deseja excluir o cliente {{ cliente.nome }}?');">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </a>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
                         <i class="fa-solid fa-folder-open" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
                         Nenhum cliente cadastrado ainda.
                     </td>
@@ -44,5 +55,11 @@
             </tbody>
         </table>
     </section>
-</main>
+
+    <style>
+        .btn-action:hover {
+            filter: brightness(1.2);
+            transform: translateY(-1px);
+        }
+    </style>
 {% endblock %}

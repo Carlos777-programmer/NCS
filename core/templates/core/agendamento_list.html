@@ -24,27 +24,37 @@
                     <th>Cliente</th>
                     <th>Veículo</th>
                     <th>Status</th>
-                    <th style="text-align: right;">Ações</th>
+                    <th style="text-align: center;">Ações</th>
                 </tr>
             </thead>
             <tbody>
                 {% for agendamento in agendamentos %}
                 <tr>
                     <td>{{ agendamento.data_hora|date:"d/m/Y H:i" }}</td>
-                    <td>{{ agendamento.cliente.nome }}</td>
+                    <td style="color: var(--text-main); font-weight: 600;">{{ agendamento.cliente.nome }}</td>
                     <td>{{ agendamento.veiculo|default:"-" }}</td>
                     <td>
-                        <span class="badge badge-{{ agendamento.status }}">
+                        <span class="badge badge-{{ agendamento.status|lower }}">
                             {{ agendamento.get_status_display }}
                         </span>
                     </td>
-                    <td style="text-align: right;">
-                        <a href="#" style="color: var(--ncs-blue); margin-right: 10px;"><i class="fa-solid fa-edit"></i></a>
+                    <td style="text-align: center; white-space: nowrap;">
+                        <!-- Botão de Editar -->
+                        <a href="{% url 'agendamento_update' agendamento.pk %}" class="btn-action" title="Editar Agendamento" style="color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 6px 10px; border-radius: 6px; text-decoration: none; margin-right: 5px; display: inline-block; transition: all 0.2s;">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>
+                        <!-- Botão de Excluir -->
+                        <a href="{% url 'agendamento_delete' agendamento.pk %}" class="btn-action" title="Excluir Agendamento" style="color: #f75a68; background: rgba(247, 90, 104, 0.1); padding: 6px 10px; border-radius: 6px; text-decoration: none; display: inline-block; transition: all 0.2s;" onclick="return confirm('Tem certeza que deseja excluir este agendamento?');">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </a>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">Nenhum agendamento encontrado.</td>
+                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                        <i class="fa-solid fa-calendar-xmark" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
+                        Nenhum agendamento encontrado.
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -64,5 +74,9 @@
     .badge-confirmado { background: rgba(13, 110, 253, 0.1); color: #0d6efd; }
     .badge-concluido { background: rgba(25, 135, 84, 0.1); color: #198754; }
     .badge-cancelado { background: rgba(220, 53, 69, 0.1); color: #dc3545; }
+    .btn-action:hover {
+        filter: brightness(1.2);
+        transform: translateY(-1px);
+    }
 </style>
 {% endblock %}

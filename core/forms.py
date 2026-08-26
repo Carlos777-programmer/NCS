@@ -42,12 +42,25 @@ class OrdemServicoForm(forms.ModelForm):
         widgets = {
             'cliente': forms.Select(attrs={'class': 'form-control'}),
             'veiculo': forms.Select(attrs={'class': 'form-control'}),
-            'servicos': forms.SelectMultiple(attrs={'class': 'form-control', 'style': 'height: 120px;'}),
+            'servicos': forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
             'valor_total': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
             'observacoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Observações...'}),
-            'servicos': forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Começa com o campo de veículos vazio para evitar exibir carros de outros clientes
+        self.fields['veiculo'].queryset = Veiculo.objects.none()
+
+        if 'cliente' in self.data:
+            try:
+                cliente_id = int(self.data.get('cliente'))
+                self.fields['veiculo'].queryset = Veiculo.objects.filter(cliente_id=cliente_id)
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk and self.instance.cliente:
+            self.fields['veiculo'].queryset = Veiculo.objects.filter(cliente=self.instance.cliente)
 
 class ServicoForm(forms.ModelForm):
     class Meta:
@@ -72,6 +85,20 @@ class AgendamentoForm(forms.ModelForm):
             'observacoes': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Começa com o campo de veículos vazio
+        self.fields['veiculo'].queryset = Veiculo.objects.none()
+
+        if 'cliente' in self.data:
+            try:
+                cliente_id = int(self.data.get('cliente'))
+                self.fields['veiculo'].queryset = Veiculo.objects.filter(cliente_id=cliente_id)
+            except (ValueError, TypeError):
+                pass
+        elif self.instance.pk and self.instance.cliente:
+            self.fields['veiculo'].queryset = Veiculo.objects.filter(cliente=self.instance.cliente)
+
 class GastoForm(forms.ModelForm):
     class Meta:
         model = Gasto
@@ -82,4 +109,4 @@ class GastoForm(forms.ModelForm):
             'valor': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'placeholder': '0.00'}),
             'categoria': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Operacional, Fixos...'}),
             'observacoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-        }
+        }   

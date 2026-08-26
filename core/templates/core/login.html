@@ -124,7 +124,7 @@
             margin-bottom: 25px;
         }
 
-        /* Container do Vídeo da Logo (Sem efeito reluzente) */
+        /* Container do Vídeo da Logo */
         .logo-wrapper {
             position: relative;
             display: inline-block;
@@ -159,7 +159,7 @@
             font-size: 13px;
         }
 
-        /* Mensagens de Erro do Django */
+        /* Mensagens de Erro do Django / Limite */
         .alert-erro {
             background: rgba(247, 90, 104, 0.1);
             border: 1px solid rgba(247, 90, 104, 0.25);
@@ -167,11 +167,12 @@
             padding: 12px 16px;
             border-radius: 8px;
             margin-bottom: 20px;
-            font-size: 14px;
+            font-size: 13px;
             display: flex;
             align-items: center;
             gap: 10px;
             animation: shakeAlert 0.4s ease-in-out;
+            line-height: 1.4;
         }
 
         @keyframes shakeAlert {
@@ -236,6 +237,11 @@
             font-size: 14px;
             outline: none !important;
             box-sizing: border-box;
+        }
+
+        .input-group-custom input:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .input-group-custom input:-webkit-autofill {
@@ -346,9 +352,9 @@
         </div>
 
         {% if form.errors %}
-            <div class="alert-erro">
+            <div class="alert-erro" id="errorAlert">
                 <i class="fa-solid fa-circle-xmark"></i>
-                <div>Usuário ou senha incorretos. Tente novamente.</div>
+                <div id="errorText">Usuário ou senha incorretos. Tente novamente.</div>
             </div>
         {% endif %}
 
@@ -378,7 +384,7 @@
                 </div>
             </div>
 
-            <button type="submit" class="btn-enviar">
+            <button type="submit" class="btn-enviar" id="submitBtn">
                 <i class="fa-solid fa-right-to-bracket me-2"></i> Autenticar no Sistema
             </button>
         </form>
@@ -389,6 +395,7 @@
     </div>
 
 <script>
+    // Lógica de exibir/esconder senha
     const passwordInput = document.getElementById('id_password') || document.querySelector('input[type="password"]');
     const toggleButton = document.getElementById('btnToggle');
     const eyeIcon = document.getElementById('eyeIcon');
@@ -407,6 +414,109 @@
             }
         });
     }
+
+    // Lógica de Limite de Tentativas e Bloqueio Temporário
+    document.addEventListener('DOMContentLoaded', function() {
+        const MAX_ATTEMPTS = 5;
+        const LOCKOUT_TIME_MS = 60000; // 60 segundos (1 minuto) de bloqueio
+        const form = document.querySelector('form');
+        const submitBtn = document.getElementById('submitBtn');
+        const userInput = document.getElementById('id_username');
+        const passInput = document.getElementById('id_password');
+        const errorAlert = document.getElementById('errorAlert');
+        const errorText = document.getElementById('errorText');
+
+        const hasDjangoError = {% if form.errors %}true{% else %}false{% endif %};
+
+        let attempts = parseInt(localStorage.getItem('ncs_login_attempts') || '0', 10);
+        let lockoutUntil = parseInt(localStorage.getItem('ncs_lockout_until') || '0', 10);
+        const now = Date.now();
+
+        if (now < lockoutUntil) {
+            triggerLockoutUI(lockoutUntil - now);
+        } else {
+            if (lockoutUntil > 0 && now >= lockoutUntil) {
+                localStorage.removeItem('ncs_lockout_until');
+                localStorage.setItem('ncs_login_attempts', '0');
+                attempts = 0;
+            }
+
+            if (hasDjangoError) {
+                attempts++;
+                localStorage.setItem('ncs_login_attempts', attempts);
+
+                if (attempts >= MAX_ATTEMPTS) {
+                    const newLockout = Date.now() + LOCKOUT_TIME_MS;
+                    localStorage.setItem('ncs_lockout_until', newLockout);
+                    triggerLockoutUI(LOCKOUT_TIME_MS);
+                } else {
+                    const remaining = MAX_ATTEMPTS - attempts;
+                    if (errorText) {
+                        errorText.textContent = `Usuário ou senha incorretos. Restam ${remaining} tentativa(s) antes do bloqueio temporário.`;
+                    }
+                }
+            }
+        }
+
+        form.addEventListener('submit', function(e) {
+            const currentLockout = parseInt(localStorage.getItem('ncs_lockout_until') || '0', 10);
+            if (Date.now() < currentLockout) {
+                e.preventDefault();
+                alert('Acesso temporariamente bloqueado devido ao excesso de tentativas incorretas.');
+            }
+        });
+
+        function triggerLockoutUI(durationMs) {
+            if (userInput) userInput.disabled = true;
+            if (passInput) passInput.disabled = true;
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.6';
+                submitBtn.style.cursor = 'not-allowed';
+            }
+
+            let alertBox = errorAlert;
+            if (!alertBox) {
+                alertBox = document.createElement('div');
+                alertBox.className = 'alert-erro';
+                alertBox.id = 'errorAlert';
+                alertBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i><div id="errorText"></div>';
+                document.querySelector('.header-login').insertAdjacentElement('afterend', alertBox);
+            }
+            
+            const textElem = alertBox.querySelector('#errorText') || alertBox.querySelector('div:last-child');
+            let timeLeft = Math.ceil(durationMs / 1000);
+
+            function updateCountdown() {
+                if (timeLeft <= 0) {
+                    localStorage.removeItem('ncs_lockout_until');
+                    localStorage.setItem('ncs_login_attempts', '0');
+                    if (userInput) userInput.disabled = false;
+                    if (passInput) passInput.disabled = false;
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.style.opacity = '1';
+                        submitBtn.style.cursor = 'pointer';
+                    }
+                    if (alertBox) alertBox.style.display = 'none';
+                    return;
+                }
+
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                const timeStr = `${minutes > 0 ? minutes + 'm ' : ''}${seconds}s`;
+
+                alertBox.innerHTML = `
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <div>Muitas tentativas incorretas. Acesso bloqueado temporariamente. Tente novamente em <strong>${timeStr}</strong>.</div>
+                `;
+                timeLeft--;
+                setTimeout(updateCountdown, 1000);
+            }
+
+            updateCountdown();
+        }
+    });
 </script>
 </body>
 </html>
