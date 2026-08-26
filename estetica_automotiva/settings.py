@@ -23,12 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-6*^53$k)a$!0zd91wd7v!)-zepxcb9@xdi6^zvbe@s9q-@n#o#'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['ncscar.pythonanywhere.com', 'localhost', '127.0.0.1']
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://excitable-unspoken-overtime.ngrok-free.dev',
+    'https://ncscar.pythonanywhere.com',
 ]
 
 
@@ -120,6 +120,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 LOGIN_REDIRECT_URL = 'dashboard' 
@@ -132,6 +133,5 @@ LOGOUT_REDIRECT_URL = 'login'
 
 
 # Email
-# https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
-
+# https://docs.numpy.org/... (or Django topics email)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
