@@ -13,7 +13,7 @@ class Veiculo(models.Model):
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE)
     marca = models.CharField(max_length=50, blank=True, null=True, default="Não especificado")
     modelo = models.CharField(max_length=50, blank=True, null=True, default="Não especificado")
-    placa = models.CharField(max_length=10, blank=True, null=True, default="Não informada")
+    placa = models.CharField(max_length=10, blank=True, null=True, default="Sem Placa")
     ano = models.IntegerField(blank=True, null=True)
 
     def __str__(self):

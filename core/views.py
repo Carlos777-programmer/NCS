@@ -84,10 +84,8 @@ def cliente_update(request, pk):
 @login_required
 def cliente_delete(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
-    if request.method == 'POST':
-        cliente.delete()
-        return redirect('clientes_list')
-    return render(request, 'core/cliente_confirm_delete.html', {'cliente': cliente})
+    cliente.delete()
+    return redirect('clientes_list')
 
 @login_required
 def veiculos_list(request):
