@@ -23,33 +23,75 @@ class CustomLoginView(LoginView):
 
 @login_required
 def dashboard(request):
-    hoje = timezone.now().date()
-    mes_atual = hoje.month
-    ano_atual = hoje.year
+    hoje = datetime.today()
+    
+    tipo_filtro = request.GET.get('tipo', 'mes')
+    mes_param = request.GET.get('mes', str(hoje.month).zfill(2))
+    trimestre_param = request.GET.get('trimestre', '1')
+    semana_param = request.GET.get('semana', str(hoje.isocalendar()[1]))
+    ano_param = request.GET.get('ano', str(hoje.year))
 
-    # 1. Contadores para os Cards
+    try:
+        ano = int(ano_param)
+    except ValueError:
+        ano = hoje.year
+
+    # 1. Contadores globais para os Cards de status geral
     em_execucao = OrdemServico.objects.filter(status='EM ANDAMENTO').count()
     
     concluidos_hoje = OrdemServico.objects.filter(
         status='CONCLUIDO', 
-        criado_em__date=hoje
+        criado_em__date=hoje.date()
     ).count()
 
-    # 2. Faturamento do mês atual (somando o valor das OS concluídas no mês)
-    faturamento_mensal = OrdemServico.objects.filter(
-        status='CONCLUIDO',
-        criado_em__month=mes_atual,
-        criado_em__year=ano_atual
-    ).aggregate(total=Sum('valor_total'))['total'] or 0
+    # 2. Queryset base de Ordens de Serviço para aplicação dos filtros avançados
+    ordens_query = OrdemServico.objects.all().order_by('-criado_em')
 
-    # 3. Ordens de Serviço Recentes (últimas 5)
-    recentes_os = OrdemServico.objects.all().order_by('-criado_em')[:5]
+    if tipo_filtro == 'mes':
+        try:
+            mes = int(mes_param)
+        except ValueError:
+            mes = hoje.month
+        ordens_query = ordens_query.filter(criado_em__year=ano, criado_em__month=mes)
+        
+    elif tipo_filtro == 'trimestre':
+        try:
+            trimestre = int(trimestre_param)
+        except ValueError:
+            trimestre = 1
+        meses_map = {1: [1, 2, 3], 2: [4, 5, 6], 3: [7, 8, 9], 4: [10, 11, 12]}
+        meses = meses_map.get(trimestre, [1, 2, 3])
+        ordens_query = ordens_query.filter(criado_em__year=ano, criado_em__month__in=meses)
+        
+    elif tipo_filtro == 'semanal':
+        try:
+            semana = int(semana_param)
+        except ValueError:
+            semana = hoje.isocalendar()[1]
+        ordens_query = ordens_query.filter(criado_em__year=ano, criado_em__week=semana)
+        
+    elif tipo_filtro == 'ano':
+        ordens_query = ordens_query.filter(criado_em__year=ano)
+        
+    else:  # 'tudo'
+        tipo_filtro = 'tudo'
+
+    # 3. Faturamento somado com base no período filtrado ativo
+    faturamento_mensal = ordens_query.filter(status='CONCLUIDO').aggregate(total=Sum('valor_total'))['total'] or 0
+
+    # 4. Ordens de Serviço filtradas para a tabela do Dashboard
+    recentes_os = ordens_query[:10]
 
     context = {
         'em_execucao': em_execucao,
         'concluidos_hoje': concluidos_hoje,
         'faturamento_mensal': faturamento_mensal,
         'recentes_os': recentes_os,
+        'tipo_filtro': tipo_filtro,
+        'mes_atual': str(mes_param).zfill(2),
+        'trimestre_atual': str(trimestre_param),
+        'semana_atual': str(semana_param),
+        'ano_atual': str(ano),
     }
     return render(request, 'core/dashboard.html', context)
 
@@ -131,8 +173,60 @@ def load_veiculos(request):
 
 @login_required
 def ordens_servico_list(request):
+    hoje = datetime.today()
+    
+    tipo_filtro = request.GET.get('tipo', 'mes')
+    mes_param = request.GET.get('mes', str(hoje.month).zfill(2))
+    trimestre_param = request.GET.get('trimestre', '1')
+    semana_param = request.GET.get('semana', str(hoje.isocalendar()[1]))
+    ano_param = request.GET.get('ano', str(hoje.year))
+
+    try:
+        ano = int(ano_param)
+    except ValueError:
+        ano = hoje.year
+
     ordens = OrdemServico.objects.all().order_by('-criado_em')
-    return render(request, 'core/ordens_servico_list.html', {'ordens': ordens})
+
+    if tipo_filtro == 'mes':
+        try:
+            mes = int(mes_param)
+        except ValueError:
+            mes = hoje.month
+        ordens = ordens.filter(criado_em__year=ano, criado_em__month=mes)
+        
+    elif tipo_filtro == 'trimestre':
+        try:
+            trimestre = int(trimestre_param)
+        except ValueError:
+            trimestre = 1
+        
+        meses_map = {1: [1, 2, 3], 2: [4, 5, 6], 3: [7, 8, 9], 4: [10, 11, 12]}
+        meses = meses_map.get(trimestre, [1, 2, 3])
+        ordens = ordens.filter(criado_em__year=ano, criado_em__month__in=meses)
+        
+    elif tipo_filtro == 'semanal':
+        try:
+            semana = int(semana_param)
+        except ValueError:
+            semana = hoje.isocalendar()[1]
+        ordens = ordens.filter(criado_em__year=ano, criado_em__week=semana)
+        
+    elif tipo_filtro == 'ano':
+        ordens = ordens.filter(criado_em__year=ano)
+        
+    else:  # 'tudo'
+        tipo_filtro = 'tudo'
+
+    context = {
+        'ordens': ordens,
+        'tipo_filtro': tipo_filtro,
+        'mes_atual': str(mes_param).zfill(2),
+        'trimestre_atual': str(trimestre_param),
+        'semana_atual': str(semana_param),
+        'ano_atual': str(ano),
+    }
+    return render(request, 'core/ordens_servico_list.html', context)
 
 @login_required
 def ordem_servico_create(request):
@@ -189,11 +283,10 @@ class OrdemServicoUpdateView(LoginRequiredMixin, UpdateView):
 
 class OrdemServicoDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = OrdemServico
-    template_name = 'core\ordem_servico_confirm_delete.html'  # o caminho do seu template
+    template_name = 'core/ordem_servico_confirm_delete.html'
     success_url = reverse_lazy('ordens_servico_list')
 
     def test_func(self):
-        # Opcional: Garante que apenas usuários específicos ou staff podem excluir
         return self.request.user.is_staff
 
 @login_required
