@@ -10,6 +10,7 @@ from django.db.models import Sum
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.core.serializers.json import DjangoJSONEncoder
 from datetime import datetime
+from webpush import send_user_notification
 from .models import Cliente, Veiculo, OrdemServico, Servico, Agendamento, Gasto
 from .forms import ClienteForm, VeiculoForm, LoginForm, OrdemServicoForm, ServicoForm, AgendamentoForm, GastoForm
 
@@ -299,7 +300,24 @@ def agendamento_create(request):
     if request.method == 'POST':
         form = AgendamentoForm(request.POST)
         if form.is_valid():
-            form.save()
+            agendamento = form.save()
+            try:
+                # Verificação segura caso o agendamento seja salvo sem um veículo
+                if agendamento.veiculo:
+                    veiculo_str = f" | Veículo: {agendamento.veiculo.modelo} ({agendamento.veiculo.placa})"
+                else:
+                    veiculo_str = " | Veículo: Não informado"
+
+                payload = {
+                    "head": "🚨 Novo Agendamento na Oficina!",
+                    "body": f"Cliente: {agendamento.cliente.nome}{veiculo_str}",
+                    "icon": "/static/img/icon-ncs.png",
+                    "url": "/agendamentos/"
+                }
+                send_user_notification(user=request.user, payload=json.dumps(payload), ttl=1000)
+            except Exception as e:
+                print(f"Erro ao enviar push notification: {e}")
+
             return redirect('agendamentos_list')
     else:
         form = AgendamentoForm()

@@ -10,16 +10,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Puxa do .env com segurança absoluta
 SECRET_KEY = os.environ.get('SECRET_KEY', 'chave-insegura-fallback')
 
-# Se quiser controlar o DEBUG pelo .env também:
-DEBUG = False
+# Controlado pelo .env para segurança em produção
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['ncscar.pythonanywhere.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['ncscar.pythonanywhere.com', 'localhost', '127.0.0.1', '192.168.3.191']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://ncscar.pythonanywhere.com',
 ]
-# Application definition
 
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -28,7 +28,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'webpush',
 ]
+
+WEBPUSH_SETTINGS = {
+    "VAPID_PUBLIC_KEY": os.getenv("VAPID_PUBLIC_KEY", ""),
+    "VAPID_PRIVATE_KEY": os.getenv("VAPID_PRIVATE_KEY", ""),
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -59,10 +65,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'estetica_automotiva.wsgi.application'
 
-
 # Database
-# https://docs.djangoproject.com/en/6.1/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -70,10 +73,7 @@ DATABASES = {
     }
 }
 
-
 # Password validation
-# https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -89,35 +89,19 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
-# https://docs.djangoproject.com/en/6.1/topics/i18n/
-
 LANGUAGE_CODE = 'pt-br'
-
 TIME_ZONE = 'America/Sao_Paulo'
-
 USE_I18N = True
-
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.1/howto/static-files/
-
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-
 LOGIN_REDIRECT_URL = 'dashboard' 
-
-
 LOGIN_URL = 'login'
-
-
 LOGOUT_REDIRECT_URL = 'login'
 
-
 # Email
-# https://docs.numpy.org/... (or Django topics email)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

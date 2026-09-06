@@ -1,0 +1,31 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Excluir Agendamento - NCS ERP{% endblock %}
+
+{% block nav_agendamentos %}active{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 40px auto;">
+    <div style="background: var(--panel-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--borda); box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+        <h2 style="margin-top: 0; color: #f75a68; display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-triangle-exclamation"></i> Confirmar Exclusão
+        </h2>
+        
+        <p style="color: var(--text-muted); font-size: 16px; line-height: 1.5; margin-bottom: 25px;">
+            Tem certeza que deseja excluir o agendamento de <strong>{{ agendamento.cliente.nome }}</strong> marcado para o dia <strong>{{ agendamento.data_hora|date:"d/m/Y H:i" }}</strong>?
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                <a href="{% url 'agendamentos_list' %}" style="background: transparent; border: 1px solid var(--borda); color: var(--text-main); padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; transition: 0.3s; display: inline-flex; align-items: center;">
+                    Cancelar
+                </a>
+                <button type="submit" style="background: #f75a68; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 15px rgba(247, 90, 104, 0.3);">
+                    Sim, Excluir
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,4 +1,5 @@
 {% load static %}
+{% load webpush_notifications %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -12,6 +13,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}NCS ERP{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Dependência de jQuery carregada obrigatoriamente antes do webpush_header -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- Header essencial do django-webpush para injetar scripts e meta tags -->
+    {% webpush_header %}
+
     <style>
         :root {
             --bg-dark: #04060b;
@@ -170,6 +178,32 @@
             color: var(--ncs-blue-light);
         }
 
+        /* Estilização moderna para o botão de WebPush gerado pelo pacote */
+        #webpush-subscribe-button {
+            background: rgba(13, 110, 253, 0.1);
+            color: var(--ncs-blue-light);
+            border: 1px solid var(--border-glow);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-sizing: border-box;
+        }
+
+        #webpush-subscribe-button:hover {
+            background: var(--ncs-blue);
+            color: white;
+            border-color: var(--ncs-blue);
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
+        }
+
         .table-container {
             background: var(--panel-bg);
             padding: 24px;
@@ -246,6 +280,11 @@
         <a href="{% url 'gastos_list' %}" class="nav-item {% block nav_gastos %}{% endblock %}"><i class="fa-solid fa-wallet"></i> Gastos</a>
         
         <div style="margin-top: auto;">
+            <!-- Botão do WebPush na Sidebar -->
+            <div style="margin-bottom: 10px; text-align: center;">
+                {% webpush_button %}
+            </div>
+
             <form action="{% url 'logout' %}" method="post" style="margin: 0;">
                 {% csrf_token %}
                 <button type="submit" class="btn-logout" style="width: 100%; background: transparent; border-color: rgba(247, 90, 104, 0.2); cursor: pointer;">
