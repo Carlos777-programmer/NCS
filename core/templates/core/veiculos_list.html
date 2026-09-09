@@ -16,6 +16,31 @@
         <a href="{% url 'veiculo_create' %}" class="btn-primary"><i class="fa-solid fa-plus"></i> Novo Veículo</a>
     </header>
 
+    <!-- BARRA DE FILTROS E PESQUISA COM AUTOCOMPLETE E FILTRO EM TEMPO REAL -->
+    <div style="background: var(--panel-bg); border: 1px solid var(--borda); padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+        <form method="get" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;" autocomplete="off">
+            
+            <!-- Campo de Pesquisa com Autocomplete Flutuante -->
+            <div style="flex: 1; min-width: 260px; position: relative;">
+                <label style="display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Pesquisar (Cliente, Marca, Modelo, Placa...)</label>
+                <div style="position: relative; display: flex; align-items: center;">
+                    <i class="fa-solid fa-search" style="position: absolute; left: 12px; color: var(--text-muted); font-size: 13px; z-index: 2;"></i>
+                    <input type="text" id="filtroVeiculoInput" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Ex: João, Volkswagen, ABC-1234..." class="btn-toggle" style="width: 100%; background: var(--bg-dark); color: white; padding-left: 35px; text-align: left;">
+                </div>
+                <!-- Menu Dropdown do Autocomplete -->
+                <div id="veiculoDropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 100; max-height: 220px; overflow-y: auto; background: rgba(15, 20, 30, 0.95); border: 1px solid var(--borda); border-radius: 8px; margin-top: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);"></div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div style="display: flex; gap: 8px;">
+                <button type="submit" class="btn-primary" style="padding: 10px 18px;"><i class="fa-solid fa-filter"></i> Filtrar</button>
+                {% if request.GET %}
+                <a href="{% url 'veiculos_list' %}" class="btn-toggle" style="padding: 10px 14px; background: var(--bg-dark); color: var(--text-muted); text-decoration: none; display: flex; align-items: center; justify-content: center; border-radius: 8px;" title="Limpar Filtros"><i class="fa-solid fa-rotate-left"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
     <section class="table-container">
         <table>
             <thead>
@@ -27,9 +52,9 @@
                     <th style="text-align: center;">Ações</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="tabelaVeiculosBody">
                 {% for veiculo in veiculos %}
-                <tr>
+                <tr data-search="{{ veiculo.cliente.nome }} {{ veiculo.marca }} {{ veiculo.modelo }} {{ veiculo.placa }} {{ veiculo.ano }}">
                     <td style="color: var(--text-main); font-weight: 600;">{{ veiculo.cliente.nome }}</td>
                     <td>
                         {% if veiculo.marca or veiculo.modelo %}
@@ -43,21 +68,19 @@
                     </td>
                     <td>{{ veiculo.ano|default:"-" }}</td>
                     <td style="text-align: center; white-space: nowrap;">
-                        <!-- Botão de Editar -->
-                        <a href="{% url 'veiculo_update' veiculo.pk %}" class="btn-action" title="Editar Veículo" style="color: #38bdf8; background: rgba(56, 189, 248, 0.1); padding: 6px 10px; border-radius: 6px; text-decoration: none; margin-right: 5px; display: inline-block; transition: all 0.2s;">
+                        <a href="{% url 'veiculo_update' veiculo.pk %}" class="btn-action btn-edit" title="Editar Veículo">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </a>
-                        <!-- Botão de Excluir -->
-                        <a href="{% url 'veiculo_delete' veiculo.pk %}" class="btn-action" title="Excluir Veículo" style="color: #f75a68; background: rgba(247, 90, 104, 0.1); padding: 6px 10px; border-radius: 6px; text-decoration: none; display: inline-block; transition: all 0.2s;" onclick="return confirm('Tem certeza que deseja excluir este veículo?');">
+                        <a href="{% url 'veiculo_delete' veiculo.pk %}" class="btn-action btn-delete" title="Excluir Veículo" onclick="return confirm('Tem certeza que deseja excluir este veículo?');">
                             <i class="fa-solid fa-trash-can"></i>
                         </a>
                     </td>
                 </tr>
                 {% empty %}
-                <tr>
+                <tr id="emptyRow">
                     <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
                         <i class="fa-solid fa-car" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
-                        Nenhum veículo cadastrado ainda.
+                        Nenhum veículo encontrado com os critérios informados.
                     </td>
                 </tr>
                 {% endfor %}
@@ -67,9 +90,108 @@
 </main>
 
 <style>
-    .btn-action:hover {
-        filter: brightness(1.2);
-        transform: translateY(-1px);
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        font-size: 13px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        margin: 0 2px;
     }
+    .btn-edit { background: rgba(13, 110, 253, 0.15); color: var(--ncs-blue-light); border: 1px solid rgba(13, 110, 253, 0.3); }
+    .btn-edit:hover { background: var(--ncs-blue); color: white; }
+    .btn-delete { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .btn-delete:hover { background: #ef4444; color: white; }
+
+    #veiculoDropdown::-webkit-scrollbar { width: 6px; }
+    #veiculoDropdown::-webkit-scrollbar-track { background: transparent; }
+    #veiculoDropdown::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputBusca = document.getElementById('filtroVeiculoInput');
+        const dropdown = document.getElementById('veiculoDropdown');
+        const linhasTabela = document.querySelectorAll('#tabelaVeiculosBody tr[data-search]');
+        const form = inputBusca ? inputBusca.closest('form') : null;
+
+        if (inputBusca && dropdown) {
+            // Coleta sugestões únicas da tabela
+            const sugestoesSet = new Set();
+            linhasTabela.forEach(tr => {
+                const tds = tr.querySelectorAll('td');
+                if (tds.length >= 4) {
+                    const cliente = tds[0].textContent.trim();
+                    const marcaModelo = tds[1].textContent.trim();
+                    const placa = tds[2].textContent.trim();
+
+                    if (cliente) sugestoesSet.add(cliente);
+                    if (marcaModelo && marcaModelo !== 'Não especificado') sugestoesSet.add(marcaModelo);
+                    if (placa && placa !== 'SEM PLACA') sugestoesSet.add(placa);
+                }
+            });
+            const listaSugestoes = Array.from(sugestoesSet);
+
+            inputBusca.addEventListener('input', function() {
+                const termo = this.value.toLowerCase().trim();
+                
+                // 1. Filtro instantâneo das linhas da tabela na tela
+                let visiveis = 0;
+                linhasTabela.forEach(tr => {
+                    const dados = tr.getAttribute('data-search').toLowerCase();
+                    if (termo === '' || dados.includes(termo)) {
+                        tr.style.display = '';
+                        visiveis++;
+                    } else {
+                        tr.style.display = 'none';
+                    }
+                });
+
+                // 2. Gerenciamento do Dropdown de Autocomplete
+                dropdown.innerHTML = '';
+                if (termo.length === 0) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+
+                const filtrados = listaSugestoes.filter(item => item.toLowerCase().includes(termo));
+                if (filtrados.length === 0) {
+                    dropdown.innerHTML = '<div style="padding: 10px 16px; color: var(--text-muted); font-size: 13px;">Nenhuma sugestão encontrada</div>';
+                    dropdown.style.display = 'block';
+                    return;
+                }
+
+                filtrados.forEach(sugestao => {
+                    const item = document.createElement('div');
+                    item.textContent = sugestao;
+                    item.style.cssText = "padding: 10px 16px; color: var(--text-main); font-size: 13px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s;";
+                    
+                    item.addEventListener('mouseenter', () => item.style.background = 'rgba(255,255,255,0.06)');
+                    item.addEventListener('mouseleave', () => item.style.background = 'transparent');
+                    
+                    item.addEventListener('click', function() {
+                        inputBusca.value = sugestao;
+                        dropdown.style.display = 'none';
+                        // Dispara o filtro nas linhas
+                        inputBusca.dispatchEvent(new Event('input'));
+                    });
+                    
+                    dropdown.appendChild(item);
+                });
+
+                dropdown.style.display = 'block';
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!inputBusca.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

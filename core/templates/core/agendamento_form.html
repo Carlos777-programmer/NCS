@@ -24,11 +24,24 @@
             {% csrf_token %}
             
             {% for field in form %}
-            <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; flex-direction: column; gap: 8px; position: relative;">
                 <label for="{{ field.id_for_label }}" style="color: var(--text-main); font-weight: 500; font-size: 13px; text-transform: uppercase;">
                     {{ field.label }}
                 </label>
-                {{ field }}
+                
+                {% if field.name == 'cliente' %}
+                    <!-- Campo de Autocomplete para Cliente -->
+                    <div style="position: relative;">
+                        <input type="text" id="input-busca-cliente" placeholder="Digite o nome do cliente para buscar..." autocomplete="off">
+                        <input type="hidden" name="{{ field.name }}" id="id_cliente_hidden" value="{{ field.value|default:'' }}">
+                        
+                        <div id="dropdown-clientes" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #0f172a; border: 1px solid var(--borda); border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 1000; margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                        </div>
+                    </div>
+                {% else %}
+                    {{ field }}
+                {% endif %}
+
                 {% if field.errors %}
                     <span style="color: #f75a68; font-size: 12px;">{{ field.errors.0 }}</span>
                 {% endif %}
@@ -47,31 +60,102 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 
 <script>
+    // Lista de clientes injetada pelo Django para o Autocomplete
+    const clientesData = [
+        {% for choice in form.cliente.field.queryset %}
+        { id: "{{ choice.pk }}", nome: "{{ choice.nome|escapejs }}" },
+        {% endfor %}
+    ];
+
     document.addEventListener('DOMContentLoaded', function() {
-        // Procura pelo campo de data/hora gerado pelo Django (geralmente id_data_hora)
+        // Flatpickr para Data/Hora
         const inputDataHora = document.getElementById('id_data_hora');
-        
         if (inputDataHora) {
             flatpickr(inputDataHora, {
-                enableTime: true,              // Habilita a seleção de hora e minuto
-                dateFormat: "Y-m-d H:i",       // Formato enviado para o Django (ISO)
-                altFormat: "d/m/Y - H:i",     // Formato amigável exibido para o usuário
-                altInput: true,                // Ativa o input amigável
-                locale: "pt",                  // Traduz os meses e dias da semana para português
-                minDate: "today",              // Impede agendamentos em datas passadas (opcional)
-                "disable": [
-                    function(date) {
-                        // Exemplo: se quiser desativar domingos (0 = Domingo)
-                        // return (date.getDay() === 0);
-                    }
-                ]
+                enableTime: true,
+                dateFormat: "Y-m-d H:i",
+                altFormat: "d/m/Y - H:i",
+                altInput: true,
+                locale: "pt",
+                minDate: "today"
+            });
+        }
+
+        // Lógica do Autocomplete de Cliente
+        const inputBusca = document.getElementById('input-busca-cliente');
+        const inputHidden = document.getElementById('id_cliente_hidden');
+        const dropdown = document.getElementById('dropdown-clientes');
+
+        if (inputBusca && inputHidden && dropdown) {
+            // Se houver valor pré-preenchido (ex: erro de validação), ajusta o texto
+            if (inputHidden.value) {
+                const clienteSelecionado = clientesData.find(c => c.id === inputHidden.value);
+                if (clienteSelecionado) {
+                    inputBusca.value = clienteSelecionado.nome;
+                }
+            }
+
+            inputBusca.addEventListener('input', function() {
+                const termo = this.value.toLowerCase().trim();
+                dropdown.innerHTML = '';
+                
+                if (termo.length === 0) {
+                    dropdown.style.display = 'none';
+                    inputHidden.value = '';
+                    return;
+                }
+
+                const filtrados = clientesData.filter(c => c.nome.toLowerCase().includes(termo));
+
+                if (filtrados.length > 0) {
+                    filtrados.forEach(cliente => {
+                        const item = document.createElement('div');
+                        item.style.padding = '10px 14px';
+                        item.style.cursor = 'pointer';
+                        item.style.color = 'var(--text-main)';
+                        item.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+                        item.textContent = cliente.nome;
+
+                        item.addEventListener('mouseover', () => {
+                            item.style.background = 'rgba(56, 189, 248, 0.1)';
+                            item.style.color = '#38bdf8';
+                        });
+                        item.addEventListener('mouseout', () => {
+                            item.style.background = 'transparent';
+                            item.style.color = 'var(--text-main)';
+                        });
+
+                        item.addEventListener('click', () => {
+                            inputBusca.value = cliente.nome;
+                            inputHidden.value = cliente.id;
+                            dropdown.style.display = 'none';
+                        });
+
+                        dropdown.appendChild(item);
+                    });
+                    dropdown.style.display = 'block';
+                } else {
+                    const vazio = document.createElement('div');
+                    vazio.style.padding = '10px 14px';
+                    vazio.style.color = 'var(--text-muted)';
+                    vazio.textContent = 'Nenhum cliente encontrado';
+                    dropdown.appendChild(vazio);
+                    dropdown.style.display = 'block';
+                    inputHidden.value = '';
+                }
+            });
+
+            // Fecha o dropdown ao clicar fora
+            document.addEventListener('click', function(e) {
+                if (!inputBusca.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                }
             });
         }
     });
 </script>
 
 <style>
-    /* Estilização padrão dos inputs do formulário */
     .table-container input:not([type="checkbox"]), 
     .table-container select, 
     .table-container textarea {
@@ -93,7 +177,6 @@
         box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2);
     }
 
-    /* Ajuste para o input visual gerado pelo Flatpickr combinar com o ERP */
     .flatpickr-input.form-control, .form-control.input {
         background: rgba(4, 6, 11, 0.6) !important;
         border: 1px solid var(--borda) !important;

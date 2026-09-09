@@ -25,7 +25,32 @@
                 <label for="{{ field.id_for_label }}" style="color: var(--text-main); font-weight: 500; font-size: 13px; letter-spacing: 0.3px; text-transform: uppercase;">
                     {{ field.label }}
                 </label>
+
+                {% if field.name == 'cliente' %}
+                <!-- AUTOCOMPLETE INTELIGENTE DE CLIENTES -->
+                <div style="position: relative;">
+                    <div style="position: relative;">
+                        <i class="fa-solid fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px;"></i>
+                        <input type="text" id="filtroClienteInput" placeholder="Digite para pesquisar e selecionar o cliente..." autocomplete="off" style="width: 100%; padding: 12px 14px 12px 38px; background: rgba(4, 6, 11, 0.6); border: 1px solid var(--borda); border-radius: 8px; color: var(--text-main); font-size: 14px; box-sizing: border-box;">
+                    </div>
+                    <!-- Lista suspensa de sugestões -->
+                    <div id="clienteDropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; z-index: 100; max-height: 220px; overflow-y: auto; background: rgba(15, 20, 30, 0.95); border: 1px solid var(--borda); border-radius: 8px; margin-top: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.4);"></div>
+                </div>
+                <!-- Select original mantido oculto para preservar o envio do form e o AJAX de veículos -->
+                <div style="display: none;">
+                    {{ field }}
+                </div>
+                {% elif field.name == 'servicos' %}
+                <!-- BARRA DE PESQUISA RÁPIDA DE SERVIÇOS -->
+                <div style="position: relative; margin-bottom: 4px;">
+                    <i class="fa-solid fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px;"></i>
+                    <input type="text" id="filtroServicosInput" placeholder="Pesquisar serviço por nome..." autocomplete="off" style="width: 100%; padding: 10px 14px 10px 38px; background: rgba(4, 6, 11, 0.7); border: 1px solid var(--borda); border-radius: 8px; color: var(--text-main); font-size: 13px; box-sizing: border-box;">
+                </div>
                 {{ field }}
+                {% else %}
+                {{ field }}
+                {% endif %}
+
                 {% if field.errors %}
                     <span style="color: #f75a68; font-size: 12px; margin-top: -4px;"><i class="fa-solid fa-circle-exclamation"></i> {{ field.errors.0 }}</span>
                 {% endif %}
@@ -49,7 +74,97 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- 1. LÓGICA DE CÁLCULO DE SERVIÇOS (Apenas exibe a sugestão, sem alterar o input) ---
+        // --- 1.A. AUTOCOMPLETE INTELIGENTE DE CLIENTES ---
+        const inputBuscaCliente = document.getElementById('filtroClienteInput');
+        const clienteDropdown = document.getElementById('clienteDropdown');
+        const clienteSelectEl = document.querySelector('#id_cliente');
+
+        if (inputBuscaCliente && clienteSelectEl && clienteDropdown) {
+            const todasOpcoesClientes = Array.from(clienteSelectEl.options)
+                .filter(opt => opt.value !== "")
+                .map(opt => ({
+                    value: opt.value,
+                    text: opt.textContent
+                }));
+
+            // Preenche o input caso já haja um cliente selecionado (modo edição)
+            const optAtual = clienteSelectEl.options[clienteSelectEl.selectedIndex];
+            if (optAtual && optAtual.value) {
+                inputBuscaCliente.value = optAtual.textContent;
+            }
+
+            inputBuscaCliente.addEventListener('input', function() {
+                const termo = this.value.toLowerCase().trim();
+                clienteDropdown.innerHTML = '';
+
+                if (termo.length === 0) {
+                    clienteDropdown.style.display = 'none';
+                    clienteSelectEl.value = "";
+                    clienteSelectEl.dispatchEvent(new Event('change'));
+                    return;
+                }
+
+                const filtrados = todasOpcoesClientes.filter(c => c.text.toLowerCase().includes(termo));
+
+                if (filtrados.length === 0) {
+                    clienteDropdown.innerHTML = '<div style="padding: 12px 16px; color: var(--text-muted); font-size: 13px;">Nenhum cliente encontrado</div>';
+                    clienteDropdown.style.display = 'block';
+                    return;
+                }
+
+                filtrados.forEach(c => {
+                    const item = document.createElement('div');
+                    item.textContent = c.text;
+                    item.style.cssText = "padding: 10px 16px; color: var(--text-main); font-size: 13px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s;";
+                    
+                    item.addEventListener('mouseenter', () => item.style.background = 'rgba(255,255,255,0.06)');
+                    item.addEventListener('mouseleave', () => item.style.background = 'transparent');
+                    
+                    item.addEventListener('click', function() {
+                        inputBuscaCliente.value = c.text;
+                        clienteSelectEl.value = c.value;
+                        clienteDropdown.style.display = 'none';
+                        // Dispara o evento change para carregar os veículos via AJAX automaticamente
+                        clienteSelectEl.dispatchEvent(new Event('change'));
+                    });
+                    
+                    clienteDropdown.appendChild(item);
+                });
+
+                clienteDropdown.style.display = 'block';
+            });
+
+            // Fecha o dropdown ao clicar fora
+            document.addEventListener('click', function(e) {
+                if (!inputBuscaCliente.contains(e.target) && !clienteDropdown.contains(e.target)) {
+                    clienteDropdown.style.display = 'none';
+                }
+            });
+        }
+
+        // --- 1.B. LÓGICA DE FILTRAGEM RÁPIDA DE SERVIÇOS ---
+        const inputBuscaServico = document.getElementById('filtroServicosInput');
+        const checkboxesServicos = document.querySelectorAll('input[name="servicos"]');
+
+        if (inputBuscaServico && checkboxesServicos.length > 0) {
+            inputBuscaServico.addEventListener('input', function() {
+                const termo = this.value.toLowerCase().trim();
+                
+                checkboxesServicos.forEach(cb => {
+                    const linhaItem = cb.closest('li') || cb.closest('div') || cb.parentElement;
+                    if (linhaItem) {
+                        const textoServico = linhaItem.textContent.toLowerCase();
+                        if (textoServico.includes(termo)) {
+                            linhaItem.style.display = '';
+                        } else {
+                            linhaItem.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        }
+
+        // --- 2. LÓGICA DE CÁLCULO DE SERVIÇOS ---
         const servicosPrecos = {{ servicos_json|safe }};
         const checkboxes = document.querySelectorAll('input[name="servicos"]');
         const displayTotal = document.getElementById('total-servicos');
@@ -68,15 +183,12 @@
             if (displayTotal) {
                 displayTotal.innerText = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
             }
-            // A linha que alterava o inputValorTotal foi removida daqui, 
-            // então agora o campo fica livre para você digitar o valor que quiser!
         }
 
         checkboxes.forEach(cb => cb.addEventListener('change', calcularTotalServicos));
         calcularTotalServicos();
 
-
-        // --- 2. LÓGICA AJAX PARA FILTRAR VEÍCULOS POR CLIENTE ---
+        // --- 3. LÓGICA AJAX PARA FILTRAR VEÍCULOS POR CLIENTE ---
         const clienteSelect = document.querySelector('#id_cliente');
         const veiculoSelect = document.querySelector('#id_veiculo');
 
@@ -87,9 +199,7 @@
                 if (clienteId) {
                     fetch(`{% url 'ajax_load_veiculos' %}?cliente_id=${clienteId}`)
                         .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Erro na resposta do servidor.');
-                            }
+                            if (!response.ok) throw new Error('Erro na resposta do servidor.');
                             return response.json();
                         })
                         .then(data => {
@@ -112,7 +222,6 @@
                                     if (veiculoSelecionadoId && veiculo.id == veiculoSelecionadoId) {
                                         option.selected = true;
                                     }
-                                    
                                     veiculoSelect.appendChild(option);
                                 });
                             }
@@ -135,8 +244,7 @@
             }
 
             clienteSelect.addEventListener('change', function() {
-                const clienteId = this.value;
-                atualizarVeiculos(clienteId);
+                atualizarVeiculos(this.value);
             });
         }
     });
@@ -157,16 +265,9 @@
         scrollbar-color: rgba(255,255,255,0.2) transparent;
     }
 
-    #id_servicos::-webkit-scrollbar {
-        width: 6px;
-    }
-    #id_servicos::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    #id_servicos::-webkit-scrollbar-thumb {
-        background: rgba(255,255,255,0.15);
-        border-radius: 4px;
-    }
+    #id_servicos::-webkit-scrollbar { width: 6px; }
+    #id_servicos::-webkit-scrollbar-track { background: transparent; }
+    #id_servicos::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
     
     #id_servicos li {
         display: flex;
@@ -179,21 +280,14 @@
         transition: background 0.2s ease, border-left 0.2s ease;
     }
 
-    #id_servicos li:last-child {
-        border-bottom: none;
-    }
+    #id_servicos li:last-child { border-bottom: none; }
+    #id_servicos li:hover { background: rgba(255,255,255,0.04); }
 
-    #id_servicos li:hover {
-        background: rgba(255,255,255,0.04);
-    }
-
-    /* Destaque sutil para itens marcados (suporta navegadores modernos) */
     #id_servicos li:has(input[type="checkbox"]:checked) {
         background: rgba(13, 110, 253, 0.08);
         border-left: 3px solid var(--ncs-blue, #0d6efd);
     }
 
-    /* Caixa de seleção customizada e limpa */
     input[type="checkbox"] {
         appearance: none;
         -webkit-appearance: none;
@@ -228,7 +322,6 @@
         box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
     }
 
-    /* Reset geral para os demais inputs do formulário */
     .table-container input:not([type="checkbox"]),
     .table-container select,
     .table-container textarea {
@@ -252,13 +345,7 @@
         outline: none;
     }
 
-    .table-container select {
-        cursor: pointer;
-    }
-
-    .table-container textarea {
-        resize: vertical;
-        min-height: 100px;
-    }
+    .table-container select { cursor: pointer; }
+    .table-container textarea { resize: vertical; min-height: 100px; }
 </style>
 {% endblock %}

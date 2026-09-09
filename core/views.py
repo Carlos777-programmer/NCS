@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.core.serializers.json import DjangoJSONEncoder
 from datetime import datetime
@@ -130,8 +130,20 @@ def cliente_delete(request, pk):
     return redirect('clientes_list')
 
 @login_required
+@login_required
 def veiculos_list(request):
+    query = request.GET.get('q', '').strip()
     veiculos = Veiculo.objects.all().select_related('cliente').order_by('-id')
+    
+    if query:
+        veiculos = veiculos.filter(
+            Q(cliente__nome__icontains=query) |
+            Q(marca__icontains=query) |
+            Q(modelo__icontains=query) |
+            Q(placa__icontains=query) |
+            Q(ano__icontains=query)
+        )
+        
     return render(request, 'core/veiculos_list.html', {'veiculos': veiculos})
 
 @login_required
@@ -173,58 +185,66 @@ def load_veiculos(request):
 
 @login_required
 def ordens_servico_list(request):
-    hoje = datetime.today()
-    
-    tipo_filtro = request.GET.get('tipo', 'mes')
-    mes_param = request.GET.get('mes', str(hoje.month).zfill(2))
-    trimestre_param = request.GET.get('trimestre', '1')
-    semana_param = request.GET.get('semana', str(hoje.isocalendar()[1]))
-    ano_param = request.GET.get('ano', str(hoje.year))
-
-    try:
-        ano = int(ano_param)
-    except ValueError:
-        ano = hoje.year
-
     ordens = OrdemServico.objects.all().order_by('-criado_em')
 
-    if tipo_filtro == 'mes':
-        try:
-            mes = int(mes_param)
-        except ValueError:
-            mes = hoje.month
-        ordens = ordens.filter(criado_em__year=ano, criado_em__month=mes)
-        
-    elif tipo_filtro == 'trimestre':
-        try:
-            trimestre = int(trimestre_param)
-        except ValueError:
-            trimestre = 1
-        
-        meses_map = {1: [1, 2, 3], 2: [4, 5, 6], 3: [7, 8, 9], 4: [10, 11, 12]}
-        meses = meses_map.get(trimestre, [1, 2, 3])
-        ordens = ordens.filter(criado_em__year=ano, criado_em__month__in=meses)
-        
-    elif tipo_filtro == 'semanal':
-        try:
-            semana = int(semana_param)
-        except ValueError:
-            semana = hoje.isocalendar()[1]
-        ordens = ordens.filter(criado_em__year=ano, criado_em__week=semana)
-        
-    elif tipo_filtro == 'ano':
-        ordens = ordens.filter(criado_em__year=ano)
-        
-    else:  # 'tudo'
-        tipo_filtro = 'tudo'
+    # 1. Capturar parâmetros do request.GET
+    query = request.GET.get('q', '').strip()
+    status_filtro = request.GET.get('status', '').strip()
+    tipo_filtro = request.GET.get('tipo', 'mes')
+    
+    ano_atual = request.GET.get('ano', str(datetime.now().year))
+    mes_atual = request.GET.get('mes', datetime.now().strftime('%m'))
+    trimestre_atual = request.GET.get('trimestre', '1')
+    semana_atual = request.GET.get('semana', '1')
+
+    # 2. Aplicar filtro de texto (Busca global)
+    if query:
+        # Se a busca começar com #, podemos tentar filtrar direto pelo ID
+        if query.startswith('#'):
+            id_str = query.replace('#', '')
+            if id_str.isdigit():
+                ordens = ordens.filter(id=id_str)
+            else:
+                ordens = ordens.none()
+        else:
+            ordens = ordens.filter(
+                Q(cliente__nome__icontains=query) |
+                Q(veiculo__marca__icontains=query) |
+                Q(veiculo__modelo__icontains=query) |
+                Q(veiculo__placa__icontains=query) |
+                Q(id__icontains=query)
+            )
+
+    # 3. Aplicar filtro por Status
+    if status_filtro:
+        ordens = ordens.filter(status=status_filtro)
+
+    # 4. Aplicar filtros Temporais
+    if tipo_filtro == 'mes' and ano_atual and mes_atual:
+        ordens = ordens.filter(criado_em__year=int(ano_atual), criado_em__month=int(mes_atual))
+    elif tipo_filtro == 'ano' and ano_atual:
+        ordens = ordens.filter(criado_em__year=int(ano_atual))
+    elif tipo_filtro == 'trimestre' and ano_atual:
+        ano = int(ano_atual)
+        trimestre = int(trimestre_atual)
+        meses_trimestre = {
+            1: [1, 2, 3],
+            2: [4, 5, 6],
+            3: [7, 8, 9],
+            4: [10, 11, 12]
+        }
+        ordens = ordens.filter(criado_em__year=ano, criado_em__month__in=meses_trimestre.get(trimestre, []))
+    elif tipo_filtro == 'semanal' and ano_atual and semana_atual:
+        ordens = ordens.filter(criado_em__year=int(ano_atual), criado_em__week=int(semana_atual))
 
     context = {
         'ordens': ordens,
         'tipo_filtro': tipo_filtro,
-        'mes_atual': str(mes_param).zfill(2),
-        'trimestre_atual': str(trimestre_param),
-        'semana_atual': str(semana_param),
-        'ano_atual': str(ano),
+        'status_filtro': status_filtro,
+        'ano_atual': ano_atual,
+        'mes_atual': mes_atual,
+        'trimestre_atual': trimestre_atual,
+        'semana_atual': semana_atual,
     }
     return render(request, 'core/ordens_servico_list.html', context)
 
@@ -291,7 +311,8 @@ class OrdemServicoDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView
 
 @login_required
 def agendamentos_list(request):
-    agendamentos = Agendamento.objects.all().order_by('data_hora')
+    agora = timezone.now()
+    agendamentos = Agendamento.objects.filter(data_hora__gte=agora).order_by('data_hora')
     return render(request, 'core/agendamento_list.html', {'agendamentos': agendamentos})
 
 @login_required
