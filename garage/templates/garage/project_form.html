@@ -1,0 +1,46 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{% if project %}Editar Projeto{% else %}Novo Projeto{% endif %} | NCS ERP{% endblock %}
+{% block nav_projects %}active{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <h1 style="margin: 0; font-size: 24px; color: var(--text-main);">
+        {% if project %}Editar Projeto: {{ project.title }}{% else %}Cadastrar Novo Projeto / Foto{% endif %}
+    </h1>
+    <a href="{% url 'projects_list' %}" class="btn-toggle"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+</div>
+
+<div class="table-container" style="max-width: 700px; margin: 0 auto;">
+    <form method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 20px;">    
+        <div>
+            <label style="display: block; margin-bottom: 8px; color: var(--text-main); font-weight: 600;">Título do Projeto</label>
+            <input type="text" name="title" value="{{ form.title.value|default_if_none:'' }}" required style="width: 100%; padding: 12px; background: rgba(4,6,11,0.6); border: 1px solid var(--borda); border-radius: 8px; color: var(--text-main);">
+        </div>
+
+        <div>
+            <label style="display: block; margin-bottom: 8px; color: var(--text-main); font-weight: 600;">Categoria</label>
+            <input type="text" name="category" value="{{ form.category.value|default_if_none:'' }}" placeholder="Ex: Vitrificação, Full Wrapping, Polimento..." required style="width: 100%; padding: 12px; background: rgba(4,6,11,0.6); border: 1px solid var(--borda); border-radius: 8px; color: var(--text-main);">
+        </div>
+
+        <div>
+            <label style="display: block; margin-bottom: 8px; color: var(--text-main); font-weight: 600;">Foto do Dispositivo (Galeria)</label>
+            {% if form.instance.image %}
+                <div style="margin-bottom: 8px; font-size: 13px; color: var(--text-muted);">
+                    Arquivo atual: <a href="{{ form.instance.image.url }}" target="_blank" style="color: var(--accent);">Ver imagem atual</a>
+                </div>
+            {% endif %}
+            <input type="file" name="image" accept="image/*" style="width: 100%; padding: 12px; background: rgba(4,6,11,0.6); border: 1px solid var(--borda); border-radius: 8px; color: var(--text-main);">
+        </div>
+
+        <div>
+            <label style="display: block; margin-bottom: 8px; color: var(--text-main); font-weight: 600;">Descrição</label>
+            <textarea name="description" rows="4" style="width: 100%; padding: 12px; background: rgba(4,6,11,0.6); border: 1px solid var(--borda); border-radius: 8px; color: var(--text-main); resize: vertical;">{{ form.description.value|default_if_none:'' }}</textarea>
+        </div>
+
+        <button type="submit" class="btn-primary" style="justify-content: center; cursor: pointer; border: none;">
+            <i class="fa-solid fa-check"></i> {% if project %}Salvar Alterações{% else %}Salvar Projeto{% endif %}
+        </button>
+    </form>
+</div>
+{% endblock %}

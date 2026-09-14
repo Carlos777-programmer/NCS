@@ -1,10 +1,10 @@
 {% extends 'core/base.html' %}
-{% block title %}Novo Gasto - NCS ERP{% endblock %}
+{% block title %}{% if form.instance.pk %}Editar Gasto{% else %}Novo Gasto{% endif %} - NCS ERP{% endblock %}
 {% block nav_gastos %}active{% endblock %}
 
 {% block content %}
     <div class="topbar">
-        <h2>Registrar Novo Gasto</h2>
+        <h2>{% if form.instance.pk %}Editar Gasto{% else %}Registrar Novo Gasto{% endif %}</h2>
         <a href="{% url 'gastos_list' %}" class="btn-toggle" style="text-decoration: none;"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
     </div>
 
@@ -54,14 +54,15 @@
             </div>
 
             <div style="display: flex; gap: 15px; align-items: center;">
-                <button type="submit" class="btn-primary" style="border: none; cursor: pointer;"><i class="fa-solid fa-check"></i> Salvar Gasto</button>
+                <button type="submit" class="btn-primary" style="border: none; cursor: pointer;">
+                    <i class="fa-solid fa-check"></i> {% if form.instance.pk %}Salvar Alterações{% else %}Salvar Gasto{% endif %}
+                </button>
                 <a href="{% url 'gastos_list' %}" class="btn-toggle" style="text-decoration: none; padding: 10px 20px; text-align: center; display: inline-flex; align-items: center;">Cancelar</a>
             </div>
         </form>
     </div>
 
 <style>
-    /* Garantia de estilização fluida para todos os inputs e selects do Django */
     input[type="text"], 
     input[type="number"], 
     input[type="date"], 

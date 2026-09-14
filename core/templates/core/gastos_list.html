@@ -105,8 +105,14 @@
                     <td style="color: var(--text-main); font-weight: 500;">{{ gasto.descricao }}</td>
                     <td>{{ gasto.categoria|default:"-" }}</td>
                     <td style="color: #f75a68; font-weight: 600;">R$ {{ gasto.valor|floatformat:2 }}</td>
-                    <td style="text-align: right;">
-                        <form action="{% url 'gasto_delete' gasto.id %}" method="post" style="display:inline;" onsubmit="return confirm('Deseja realmente excluir este gasto?');">
+                    <td style="text-align: right; display: flex; gap: 12px; justify-content: flex-end; align-items: center;">
+                        <!-- Botão de Editar -->
+                        <a href="{% url 'gasto_update' gasto.id %}" style="color: var(--ncs-blue-light); font-size: 16px; text-decoration: none;" title="Editar">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>
+
+                        <!-- Botão de Excluir -->
+                        <form action="{% url 'gasto_delete' gasto.id %}" method="post" style="display:inline; margin: 0;" onsubmit="return confirm('Deseja realmente excluir este gasto?');">
                             {% csrf_token %}
                             <button type="submit" style="background: transparent; border: none; color: #f75a68; cursor: pointer; font-size: 16px;" title="Excluir">
                                 <i class="fa-solid fa-trash"></i>
@@ -150,10 +156,8 @@
         } else if (tipo === 'ano') {
             campoAno.style.display = 'block';
         }
-        // Se for 'tudo', nenhum campo de data aparece
     }
 
-    // Executa ao carregar para manter o estado correto
     document.addEventListener('DOMContentLoaded', alternarCamposFiltro);
 </script>
 {% endblock %}

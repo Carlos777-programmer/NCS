@@ -1,0 +1,63 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Projetos & Fotos | NCS ERP{% endblock %}
+{% block nav_projects %}active{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <h1 style="margin: 0; font-size: 24px; color: var(--text-main);">Galeria de Projetos</h1>
+    <a href="{% url 'project_create' %}" class="btn-primary">
+        <i class="fa-solid fa-plus"></i> Novo Projeto
+    </a>
+</div>
+
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Imagem</th>
+                <th>Título</th>
+                <th>Categoria</th>
+                <th>Data</th>
+                <th style="text-align: right;">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects %}
+            <tr>
+                <td>
+                    {% if project.image %}
+                        <img src="{{ project.image.url }}" alt="{{ project.title }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">
+                    {% else %}
+                        <span style="color: var(--text-muted);">Sem foto</span>
+                    {% endif %}
+                </td>
+                <td style="color: var(--text-main); font-weight: 600;">{{ project.title }}</td>
+                <td>{{ project.category }}</td>
+                <td>{{ project.created_at|date:"d/m/Y H:i" }}</td>
+                <td style="text-align: right;">
+                    <div style="display: inline-flex; gap: 12px; align-items: center;">
+                        <!-- Botão de Editar -->
+                        <a href="{% url 'project_update' project.id %}" style="color: var(--ncs-blue-light); font-size: 16px; text-decoration: none;" title="Editar">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>
+
+                        <!-- Botão de Excluir -->
+                        <form action="{% url 'project_delete' project.id %}" method="post" style="display:inline; margin: 0;" onsubmit="return confirm('Deseja realmente excluir este projeto?');">
+                            {% csrf_token %}
+                            <button type="submit" style="background: transparent; border: none; color: #f75a68; cursor: pointer; font-size: 16px;" title="Excluir">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum projeto cadastrado ainda.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}s

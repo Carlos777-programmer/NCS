@@ -36,6 +36,7 @@ urlpatterns = [
     path('agendamentos/<int:pk>/excluir/', views.agendamento_delete, name='agendamento_delete'),
     path('gastos/', views.gastos_list, name='gastos_list'),
     path('gastos/novo/', views.gasto_create, name='gasto_create'),
+    path('gastos/<int:pk>/editar/', views.gasto_update, name='gasto_update'),
     path('gastos/deletar/<int:pk>/', views.gasto_delete, name='gasto_delete'),
     path('sw.js', TemplateView.as_view(template_name='core/sw.js', content_type='application/javascript'), name='service_worker'),   
 ]

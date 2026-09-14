@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'chave-insegura-fallback')
 
 # Se quiser controlar o DEBUG pelo .env também:
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['ncscar.pythonanywhere.com', 'localhost', '127.0.0.1']
 
@@ -28,9 +28,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core',
+    'rest_framework',
+    'corsheaders',
+    'garage',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -39,6 +43,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'estetica_automotiva.urls'
 
@@ -121,3 +127,6 @@ LOGOUT_REDIRECT_URL = 'login'
 # Email
 # https://docs.numpy.org/... (or Django topics email)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

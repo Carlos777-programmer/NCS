@@ -420,6 +420,18 @@ def gasto_create(request):
     return render(request, 'core/gasto_form.html', {'form': form})
 
 @login_required
+def gasto_update(request, pk):
+    gasto = get_object_or_404(Gasto, pk=pk)
+    if request.method == 'POST':
+        form = GastoForm(request.POST, instance=gasto)
+        if form.is_valid():
+            form.save()
+            return redirect('gastos_list')
+    else:
+        form = GastoForm(instance=gasto)
+    return render(request, 'core/gasto_form.html', {'form': form})
+
+@login_required
 def gasto_delete(request, pk):
     gasto = get_object_or_404(Gasto, pk=pk)
     if request.method == 'POST':
