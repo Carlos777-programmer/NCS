@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'chave-insegura-fallback')
 
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['ncscar.pythonanywhere.com', 'localhost', '127.0.0.1']
 
