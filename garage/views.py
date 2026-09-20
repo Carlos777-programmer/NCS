@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, redirect, render
-from .models import Project
+from django.http import JsonResponse
+from .models import Project, ProjectMedia  # Importamos o modelo ProjectMedia
 from .forms import ProjectForm
 
 def projects_list(request):
@@ -8,34 +9,52 @@ def projects_list(request):
 
 def project_create(request):
     if request.method == 'POST':
-        title = request.POST.get('title')
-        category = request.POST.get('category')
-        description = request.POST.get('description')
-        image = request.FILES.get('image')
-        
-        Project.objects.create(
-            title=title,
-            category=category,
-            description=description,
-            image=image
-        )
-        return redirect('projects_list')
+        form = ProjectForm(request.POST, request.FILES)
+        if form.is_valid():
+            project = form.save()
+            
+            # Captura e salva múltiplos arquivos de uma vez (fotos e vídeos)
+            files = request.FILES.getlist('media_files')
+            for f in files:
+                ProjectMedia.objects.create(project=project, file=f)
+                
+            return redirect('projects_list')
+    else:
+        form = ProjectForm()
     
-    return render(request, 'garage/project_form.html')
-
-from django.http import JsonResponse
+    return render(request, 'garage/project_form.html', {'form': form})
 
 def api_projects_list(request):
-    data = list(Project.objects.values('id', 'title', 'category', 'description', 'image', 'created_at'))
+    # Otimizamos a consulta usando prefetch_related para puxar as mídias junto
+    projects = Project.objects.prefetch_related('media_files').all().order_by('-created_at')
+    data = []
+    for p in projects:
+        # Cria uma lista contendo as URLs absolutas de todas as fotos/vídeos deste projeto
+        media_urls = [request.build_absolute_uri(m.file.url) for m in p.media_files.all()]
+        
+        data.append({
+            'id': p.id,
+            'title': p.title,
+            'category': p.category,
+            'description': p.description,
+            'media': media_urls,  # Retorna a lista completa de mídias
+            'created_at': p.created_at.isoformat()
+        })
     return JsonResponse(data, safe=False)
 
 def project_update(request, pk):
     project = get_object_or_404(Project, pk=pk)
     
     if request.method == 'POST':
-        form = ProjectForm(request.POST, instance=project)
+        form = ProjectForm(request.POST, request.FILES, instance=project)
         if form.is_valid():
             form.save()
+            
+            # Adiciona novos arquivos caso o usuário envie mais mídias na edição
+            files = request.FILES.getlist('media_files')
+            for f in files:
+                ProjectMedia.objects.create(project=project, file=f)
+                
             return redirect('projects_list') 
     else:
         form = ProjectForm(instance=project)

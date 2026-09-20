@@ -2,15 +2,15 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Carrega as variáveis do arquivo .env
+
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Puxa do .env com segurança absoluta
+
 SECRET_KEY = os.environ.get('SECRET_KEY', 'chave-insegura-fallback')
 
-# Se quiser controlar o DEBUG pelo .env também:
+
 DEBUG = True
 
 ALLOWED_HOSTS = ['ncscar.pythonanywhere.com', 'localhost', '127.0.0.1']

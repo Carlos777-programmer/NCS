@@ -3,7 +3,7 @@ from django.db import models
 class Project(models.Model):
     title = models.CharField(max_length=200)
     category = models.CharField(max_length=100)
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='projects/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -19,3 +19,11 @@ class QuoteSubmission(models.Model):
 
     def __str__(self):
         return f"{self.vehicle} - R$ {self.total_estimated}"
+    
+class ProjectMedia(models.Model):
+    project = models.ForeignKey('Project', related_name='media_files', on_delete=models.CASCADE)
+    file = models.FileField(upload_to='projects/media/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Mídia de {self.project.title}"

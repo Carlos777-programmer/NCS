@@ -5,7 +5,14 @@
 
 {% block content %}
 <div class="topbar">
-    <h1 style="margin: 0; font-size: 24px; color: var(--text-main);">Galeria de Projetos</h1>
+    <div style="display: flex; align-items: center; gap: 15px;">
+        <!-- Botão integrado com o script nativo do base.html -->
+        <button id="sidebarToggle" type="button" class="btn-toggle" title="Menu">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+        <h1 style="margin: 0; font-size: 24px; color: var(--text-main);">Galeria de Projetos</h1>
+    </div>
+
     <a href="{% url 'project_create' %}" class="btn-primary">
         <i class="fa-solid fa-plus"></i> Novo Projeto
     </a>
@@ -26,11 +33,13 @@
             {% for project in projects %}
             <tr>
                 <td>
-                    {% if project.image %}
-                        <img src="{{ project.image.url }}" alt="{{ project.title }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">
-                    {% else %}
-                        <span style="color: var(--text-muted);">Sem foto</span>
-                    {% endif %}
+                    {% with first_media=project.media_files.first %}
+                        {% if first_media %}
+                            <img src="{{ first_media.file.url }}" alt="{{ project.title }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">
+                        {% else %}
+                            <span style="color: var(--text-muted); font-size: 12px;">Sem foto</span>
+                        {% endif %}
+                    {% endwith %}
                 </td>
                 <td style="color: var(--text-main); font-weight: 600;">{{ project.title }}</td>
                 <td>{{ project.category }}</td>
@@ -60,4 +69,4 @@
         </tbody>
     </table>
 </div>
-{% endblock %}s
+{% endblock %}
