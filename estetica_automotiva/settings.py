@@ -45,7 +45,7 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "https://ncsgarage.netlify.app",
+    "https://ncscar.com.br",
 ]
 
 ROOT_URLCONF = 'estetica_automotiva.urls'
