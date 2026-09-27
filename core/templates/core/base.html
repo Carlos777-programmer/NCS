@@ -45,6 +45,7 @@
             flex-direction: column;
             flex-shrink: 0;
             transition: all 0.3s ease;
+            overflow-y: auto; /* Permite a rolagem vertical de todo o menu no mobile */
         }
 
         .sidebar-logo-container {
@@ -52,17 +53,18 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin-bottom: 35px;
+            margin-bottom: 25px;
             text-align: center;
         }
 
         .sidebar-logo-wrapper {
-            width: 250px;
-            height: 250px;
+            width: 100%;
+            max-width: 160px;
+            height: 160px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 8px;
+            margin: 0 auto 8px auto;
         }
 
         .sidebar-logo-wrapper video {
@@ -244,7 +246,7 @@
         <a href="{% url 'servicos_list' %}" class="nav-item {% block nav_servicos %}{% endblock %}"><i class="fa-solid fa-wrench"></i> Serviços</a>
         <a href="{% url 'agendamentos_list' %}" class="nav-item {% block nav_agendamentos %}{% endblock %}"><i class="fa-solid fa-calendar-days"></i> Agendamentos</a>
         <a href="{% url 'gastos_list' %}" class="nav-item {% block nav_gastos %}{% endblock %}"><i class="fa-solid fa-wallet"></i> Gastos</a>
-        <a href="{% url 'projects_list' %}" class="nav-item"><i class="fa-solid fa-images"></i> Projetos & Fotos</a>
+        <a href="{% url 'projects_list' %}" class="nav-item"><i class="fa-solid fa-images"></i>Fotos do Site</a>
         
         <div style="margin-top: auto;">
             <form action="{% url 'logout' %}" method="post" style="margin: 0;">
@@ -260,7 +262,7 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- SCRIPT PARAremover A TELA DE ABERTURA QUANDO CARREGAR -->
+    <!-- SCRIPT PARA REMOVER A TELA DE ABERTURA QUANDO CARREGAR -->
     <script>
         window.addEventListener('load', function() {
             const splash = document.getElementById('app-splash');
@@ -283,7 +285,7 @@
                     e.stopPropagation(); 
                     if (window.innerWidth <= 768) {
                         document.body.classList.toggle('sidebar-open');
-          2          } else {
+                    } else {
                         document.body.classList.toggle('sidebar-collapsed');
                     }
                 });

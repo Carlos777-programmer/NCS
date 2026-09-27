@@ -44,8 +44,9 @@ def dashboard(request):
         criado_em__date=hoje.date()
     ).count()
 
-    # 2. Queryset base de Ordens de Serviço para aplicação dos filtros avançados
+    # 2. Querysets base para aplicação dos filtros avançados
     ordens_query = OrdemServico.objects.all().order_by('-criado_em')
+    gastos_query = Gasto.objects.all()
 
     if tipo_filtro == 'mes':
         try:
@@ -53,6 +54,7 @@ def dashboard(request):
         except ValueError:
             mes = hoje.month
         ordens_query = ordens_query.filter(criado_em__year=ano, criado_em__month=mes)
+        gastos_query = gastos_query.filter(data__year=ano, data__month=mes)
         
     elif tipo_filtro == 'trimestre':
         try:
@@ -62,6 +64,7 @@ def dashboard(request):
         meses_map = {1: [1, 2, 3], 2: [4, 5, 6], 3: [7, 8, 9], 4: [10, 11, 12]}
         meses = meses_map.get(trimestre, [1, 2, 3])
         ordens_query = ordens_query.filter(criado_em__year=ano, criado_em__month__in=meses)
+        gastos_query = gastos_query.filter(data__year=ano, data__month__in=meses)
         
     elif tipo_filtro == 'semanal':
         try:
@@ -69,15 +72,19 @@ def dashboard(request):
         except ValueError:
             semana = hoje.isocalendar()[1]
         ordens_query = ordens_query.filter(criado_em__year=ano, criado_em__week=semana)
+        gastos_query = gastos_query.filter(data__year=ano, data__week=semana)
         
     elif tipo_filtro == 'ano':
         ordens_query = ordens_query.filter(criado_em__year=ano)
+        gastos_query = gastos_query.filter(data__year=ano)
         
     else:  # 'tudo'
         tipo_filtro = 'tudo'
 
-    # 3. Faturamento somado com base no período filtrado ativo
-    faturamento_mensal = ordens_query.filter(status='CONCLUIDO').aggregate(total=Sum('valor_total'))['total'] or 0
+    # 3. Cálculos financeiros baseados no período filtrado ativo
+    faturamento_periodo = ordens_query.filter(status='CONCLUIDO').aggregate(total=Sum('valor_total'))['total'] or 0
+    gastos_periodo = gastos_query.aggregate(total=Sum('valor'))['total'] or 0
+    lucro_periodo = faturamento_periodo - gastos_periodo
 
     # 4. Ordens de Serviço filtradas para a tabela do Dashboard
     recentes_os = ordens_query[:10]
@@ -85,7 +92,9 @@ def dashboard(request):
     context = {
         'em_execucao': em_execucao,
         'concluidos_hoje': concluidos_hoje,
-        'faturamento_mensal': faturamento_mensal,
+        'faturamento_periodo': faturamento_periodo,
+        'gastos_periodo': gastos_periodo,
+        'lucro_periodo': lucro_periodo,
         'recentes_os': recentes_os,
         'tipo_filtro': tipo_filtro,
         'mes_atual': str(mes_param).zfill(2),
@@ -129,7 +138,6 @@ def cliente_delete(request, pk):
     cliente.delete()
     return redirect('clientes_list')
 
-@login_required
 @login_required
 def veiculos_list(request):
     query = request.GET.get('q', '').strip()
@@ -199,7 +207,6 @@ def ordens_servico_list(request):
 
     # 2. Aplicar filtro de texto (Busca global)
     if query:
-        # Se a busca começar com #, podemos tentar filtrar direto pelo ID
         if query.startswith('#'):
             id_str = query.replace('#', '')
             if id_str.isdigit():

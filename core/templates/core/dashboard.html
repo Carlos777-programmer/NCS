@@ -14,7 +14,7 @@
         </div>
     </header>
 
-    <!-- BARRA DE FILTROS AVANÇADA (Mesmo padrão do controle de gastos) -->
+    <!-- BARRA DE FILTROS AVANÇADA -->
     <div style="background: var(--panel-bg); border: 1px solid var(--borda); padding: 20px; border-radius: 12px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
         <form method="get" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
             
@@ -78,7 +78,7 @@
         </form>
     </div>
 
-    <!-- CARDS DE ESTATÍSTICAS OTIMIZADOS PARA MOBILE -->
+    <!-- CARDS DE ESTATÍSTICAS E FINANCEIRO -->
     <section class="stats-grid">
         <div class="stat-card stat-execution">
             <div class="stat-icon"><i class="fa-solid fa-gears"></i></div>
@@ -97,8 +97,24 @@
         <div class="stat-card stat-revenue">
             <div class="stat-icon"><i class="fa-solid fa-wallet"></i></div>
             <div>
-                <h3>Faturamento Mensal</h3>
-                <p>R$ {{ faturamento_mensal|floatformat:2 }}</p>
+                <h3>Faturamento</h3>
+                <p>R$ {{ faturamento_periodo|floatformat:2 }}</p>
+            </div>
+        </div>
+        <div class="stat-card stat-expenses">
+            <div class="stat-icon"><i class="fa-solid fa-receipt"></i></div>
+            <div>
+                <h3>Gastos</h3>
+                <p style="color: #f75a68;">R$ {{ gastos_periodo|floatformat:2 }}</p>
+            </div>
+        </div>
+        <div class="stat-card stat-profit">
+            <div class="stat-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div>
+                <h3>Lucro Líquido</h3>
+                <p style="color: {% if lucro_periodo >= 0 %}#04d361{% else %}#ef4444{% endif %};">
+                    R$ {{ lucro_periodo|floatformat:2 }}
+                </p>
             </div>
         </div>
     </section>
@@ -150,10 +166,9 @@
     </section>
 
     <style>
-        /* Estilos dos Cards de Estatísticas Otimizados para Mobile */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin-bottom: 25px;
         }
@@ -183,6 +198,8 @@
         .stat-execution::before { background: #0d6efd; }
         .stat-completed::before { background: #04d361; }
         .stat-revenue::before { background: #ffc107; }
+        .stat-expenses::before { background: #f75a68; }
+        .stat-profit::before { background: #04d361; }
 
         .stat-icon {
             width: 42px;
@@ -198,6 +215,8 @@
         .stat-execution .stat-icon { background: rgba(13, 110, 253, 0.12); color: #0d6efd; }
         .stat-completed .stat-icon { background: rgba(4, 211, 97, 0.12); color: #04d361; }
         .stat-revenue .stat-icon { background: rgba(255, 193, 7, 0.12); color: #ffc107; }
+        .stat-expenses .stat-icon { background: rgba(247, 90, 104, 0.12); color: #f75a68; }
+        .stat-profit .stat-icon { background: rgba(4, 211, 97, 0.12); color: #04d361; }
         
         .stat-card h3 {
             margin: 0;
@@ -209,22 +228,17 @@
         
         .stat-card p {
             margin: 4px 0 0 0;
-            font-size: 20px; /* Reduzido proporcionalmente para encaixar bem no mobile */
+            font-size: 18px;
             font-weight: 700;
             color: var(--text-main);
         }
 
-        /* Ajustes responsivos adicionais para telas menores */
         @media (max-width: 480px) {
             .stats-grid {
                 grid-template-columns: 1fr;
             }
-            .stat-card p {
-                font-size: 18px;
-            }
         }
 
-        /* Badges de Status na Tabela */
         .status-badge {
             padding: 4px 10px;
             border-radius: 6px;
