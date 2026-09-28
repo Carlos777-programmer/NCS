@@ -4,9 +4,29 @@
 {% block nav_projects %}active{% endblock %}
 
 {% block content %}
+<style>
+    /* Estilização para forçar o tema escuro nos selects e opções */
+    .form-select {
+        width: 100%;
+        padding: 12px;
+        background-color: rgba(4, 6, 11, 0.6) !important;
+        border: 1px solid var(--borda, var(--border-color));
+        border-radius: 8px;
+        color: var(--text-main) !important;
+        cursor: pointer;
+        outline: none;
+        font-size: 14px;
+    }
+    .form-select option {
+        background-color: #04060b;
+        color: #f8fafc;
+        padding: 10px;
+    }
+</style>
+
 <div class="topbar">
     <h1 style="margin: 0; font-size: 24px; color: var(--text-main);">
-        {% if project %}Editar Projeto: {{ project.title }}{% else %}Cadastrar Novo Projeto / Mídias{% endif %}
+        {% if project %}Editar Projeto: {{ project.title }}{% else %}Cadastrar Novas Mídias{% endif %}
     </h1>
     <a href="{% url 'projects_list' %}" class="btn-toggle"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
 </div>
@@ -15,10 +35,9 @@
     <form method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 20px;">    
         {% csrf_token %} 
         
-        <!-- Bloco para mostrar erros de validação do Django -->
         {% if form.errors %}
             <div style="background: rgba(247, 90, 104, 0.1); border: 1px solid #f75a68; color: #f75a68; padding: 15px; border-radius: 8px; font-size: 14px;">
-                <strong>Erro de validação do Django:</strong>
+                <strong>Erro de validação:</strong>
                 {{ form.errors }}
             </div>
         {% endif %}
@@ -28,12 +47,33 @@
             <input type="text" name="title" value="{{ form.title.value|default_if_none:'' }}" required style="width: 100%; padding: 12px; background: rgba(4,6,11,0.6); border: 1px solid var(--borda); border-radius: 8px; color: var(--text-main);">
         </div>
 
+        <!-- Categoria do Serviço -->
         <div>
-            <label style="display: block; margin-bottom: 8px; color: var(--text-main); font-weight: 600;">Categoria</label>
-            <input type="text" name="category" value="{{ form.category.value|default_if_none:'' }}" placeholder="Ex: Vitrificação, Full Wrapping, Polimento..." required style="width: 100%; padding: 12px; background: rgba(4,6,11,0.6); border: 1px solid var(--borda); border-radius: 8px; color: var(--text-main);">
+            <label style="display: block; margin-bottom: 8px; color: var(--text-main); font-weight: 600;">Categoria do Serviço</label>
+            <select name="category" required class="form-select">
+                <option value="" disabled {% if not form.category.value %}selected{% endif %}>Selecione uma categoria...</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if form.category.value|stringformat:"s" == cat.id|stringformat:"s" %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                {% endfor %}
+            </select>
         </div>
 
-        <!-- Seção de Múltiplas Mídias (Fotos e Vídeos) -->
+        <!-- Tipo de Veículo -->
+        <div>
+            <label style="display: block; margin-bottom: 8px; color: var(--text-main); font-weight: 600;">Tipo de Veículo</label>
+            <select name="vehicle_type" required class="form-select">
+                <option value="" disabled {% if not form.vehicle_type.value %}selected{% endif %}>Selecione o tipo de veículo...</option>
+                {% for vt in vehicle_types %}
+                    <option value="{{ vt.id }}" {% if form.vehicle_type.value|stringformat:"s" == vt.id|stringformat:"s" %}selected{% endif %}>
+                        {{ vt.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Fotos e Vídeos -->
         <div>
             <label style="display: block; margin-bottom: 8px; color: var(--text-main); font-weight: 600;">Fotos e Vídeos do Projeto</label>
             
@@ -52,7 +92,6 @@
                 </div>
             {% endif %}
 
-            <!-- Input com 'multiple' para aceitar vários arquivos e aceitar imagens/vídeos -->
             <input type="file" name="media_files" multiple accept="image/*,video/*" style="width: 100%; padding: 12px; background: rgba(4,6,11,0.6); border: 1px solid var(--borda); border-radius: 8px; color: var(--text-main);">
             <small style="display: block; margin-top: 5px; color: var(--text-muted); font-size: 12px;">Você pode selecionar várias fotos ou vídeos de uma só vez.</small>
         </div>

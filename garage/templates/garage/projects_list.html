@@ -4,9 +4,27 @@
 {% block nav_projects %}active{% endblock %}
 
 {% block content %}
+<style>
+    /* Estilização para forçar o tema escuro nos selects e opções */
+    .filter-select {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        background-color: var(--bg-input, #1e293b) !important;
+        color: var(--text-main, #f8fafc) !important;
+        font-size: 14px;
+        cursor: pointer;
+        outline: none;
+    }
+    .filter-select option {
+        background-color: var(--bg-input, #1e293b);
+        color: var(--text-main, #f8fafc);
+        padding: 10px;
+    }
+</style>
+
 <div class="topbar">
     <div style="display: flex; align-items: center; gap: 15px;">
-        <!-- Botão integrado com o script nativo do base.html -->
         <button id="sidebarToggle" type="button" class="btn-toggle" title="Menu">
             <i class="fa-solid fa-bars"></i>
         </button>
@@ -18,6 +36,45 @@
     </a>
 </div>
 
+<!-- Barra de Filtros por Categoria e Tipo de Veículo -->
+<div style="background: var(--bg-card); padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; border: 1px solid var(--border-color);">
+    <form method="get" style="display: flex; gap: 15px; align-items: center; width: 100%; margin: 0; flex-wrap: wrap;">
+        
+        <!-- Filtro de Categoria -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <label for="categoria" style="color: var(--text-muted); font-size: 14px; font-weight: 500;">Serviço:</label>
+            <select name="categoria" id="categoria" onchange="this.form.submit()" class="filter-select">
+                <option value="">Todas as Categorias</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if categoria_selecionada == cat.id|stringformat:"s" %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Filtro de Tipo de Veículo -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <label for="vehicle_type" style="color: var(--text-muted); font-size: 14px; font-weight: 500;">Veículo:</label>
+            <select name="vehicle_type" id="vehicle_type" onchange="this.form.submit()" class="filter-select">
+                <option value="">Todos os Veículos</option>
+                {% for vt in vehicle_types %}
+                    <option value="{{ vt.id }}" {% if vehicle_type_selecionado == vt.id|stringformat:"s" %}selected{% endif %}>
+                        {{ vt.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Botão para limpar filtros -->
+        {% if categoria_selecionada or vehicle_type_selecionado %}
+            <a href="{% url 'projects_list' %}" style="color: #f75a68; font-size: 13px; text-decoration: none; display: flex; align-items: center; gap: 4px; margin-left: auto;">
+                <i class="fa-solid fa-xmark"></i> Limpar filtros
+            </a>
+        {% endif %}
+    </form>
+</div>
+
 <div class="table-container">
     <table>
         <thead>
@@ -25,6 +82,7 @@
                 <th>Imagem</th>
                 <th>Título</th>
                 <th>Categoria</th>
+                <th>Tipo de Veículo</th>
                 <th>Data</th>
                 <th style="text-align: right;">Ações</th>
             </tr>
@@ -42,16 +100,30 @@
                     {% endwith %}
                 </td>
                 <td style="color: var(--text-main); font-weight: 600;">{{ project.title }}</td>
-                <td>{{ project.category }}</td>
+                <td>
+                    {% if project.category %}
+                        <span style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500;">
+                            {{ project.category.name }}
+                        </span>
+                    {% else %}
+                        <span style="color: var(--text-muted); font-size: 12px;">N/A</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if project.vehicle_type %}
+                        <span style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 500;">
+                            {{ project.vehicle_type.name }}
+                        </span>
+                    {% else %}
+                        <span style="color: var(--text-muted); font-size: 12px;">N/A</span>
+                    {% endif %}
+                </td>
                 <td>{{ project.created_at|date:"d/m/Y H:i" }}</td>
                 <td style="text-align: right;">
                     <div style="display: inline-flex; gap: 12px; align-items: center;">
-                        <!-- Botão de Editar -->
                         <a href="{% url 'project_update' project.id %}" style="color: var(--ncs-blue-light); font-size: 16px; text-decoration: none;" title="Editar">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </a>
-
-                        <!-- Botão de Excluir -->
                         <form action="{% url 'project_delete' project.id %}" method="post" style="display:inline; margin: 0;" onsubmit="return confirm('Deseja realmente excluir este projeto?');">
                             {% csrf_token %}
                             <button type="submit" style="background: transparent; border: none; color: #f75a68; cursor: pointer; font-size: 16px;" title="Excluir">
@@ -63,7 +135,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="5" style="text-align: center; color: var(--text-muted);">Nenhum projeto cadastrado ainda.</td>
+                <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">Nenhum projeto encontrado com os filtros selecionados.</td>
             </tr>
             {% endfor %}
         </tbody>
