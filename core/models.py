@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 class Cliente(models.Model):
     nome = models.CharField(max_length=100)
@@ -74,3 +75,24 @@ class Gasto(models.Model):
 
     def __str__(self):
         return f"{self.descricao} - R$ {self.valor} ({self.data.strftime('%d/%m/%Y')})"
+    
+class FolhaPagamento(models.Model):
+    SOCIO_CHOICES = [
+        ('Nathannael', 'Nathannael'),
+        ('Carlos Eduardo', 'Carlos Eduardo'),
+    ]
+    
+    TIPO_CHOICES = [
+        ('pro_labore', 'Pró-labore'),
+        ('lucros', 'Distribuição de Lucros'),
+        ('adiantamento', 'Adiantamento'),
+    ]
+
+    socio = models.CharField(max_length=50, choices=SOCIO_CHOICES, verbose_name="Sócio")
+    valor = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Valor (R$)")
+    data = models.DateField(default=timezone.now, verbose_name="Data")
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='lucros', verbose_name="Tipo")
+    observacao = models.TextField(blank=True, null=True, verbose_name="Observação")
+
+    def __str__(self):
+        return f"{self.socio} - R$ {self.valor} ({self.data})"

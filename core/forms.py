@@ -1,5 +1,6 @@
 from django.contrib.auth.forms import AuthenticationForm
 from django import forms
+from .models import FolhaPagamento
 from .models import Cliente, Veiculo, OrdemServico, Servico, Agendamento, Gasto
 
 class LoginForm(AuthenticationForm):
@@ -110,3 +111,15 @@ class GastoForm(forms.ModelForm):
             'categoria': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ex: Operacional, Fixos...'}),
             'observacoes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }   
+
+class FolhaPagamentoForm(forms.ModelForm):
+    class Meta:
+        model = FolhaPagamento
+        fields = ['socio', 'valor', 'data', 'tipo', 'observacao']
+        widgets = {
+            'socio': forms.Select(attrs={'class': 'form-control'}),
+            'valor': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'data': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'tipo': forms.Select(attrs={'class': 'form-control'}),
+            'observacao': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }

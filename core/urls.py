@@ -38,5 +38,6 @@ urlpatterns = [
     path('gastos/novo/', views.gasto_create, name='gasto_create'),
     path('gastos/<int:pk>/editar/', views.gasto_update, name='gasto_update'),
     path('gastos/deletar/<int:pk>/', views.gasto_delete, name='gasto_delete'),
+    path('folha-pagamento/', views.folha_pagamento_list, name='folha_pagamento_list'),
     path('sw.js', TemplateView.as_view(template_name='core/sw.js', content_type='application/javascript'), name='service_worker'),   
 ]

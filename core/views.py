@@ -10,8 +10,8 @@ from django.db.models import Sum, Q
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.core.serializers.json import DjangoJSONEncoder
 from datetime import datetime
-from .models import Cliente, Veiculo, OrdemServico, Servico, Agendamento, Gasto
-from .forms import ClienteForm, VeiculoForm, LoginForm, OrdemServicoForm, ServicoForm, AgendamentoForm, GastoForm
+from .models import Cliente, Veiculo, OrdemServico, Servico, Agendamento, Gasto, FolhaPagamento
+from .forms import ClienteForm, VeiculoForm, LoginForm, OrdemServicoForm, ServicoForm, AgendamentoForm, GastoForm, FolhaPagamentoForm
 
 def login_view(request):
     return render(request, 'core/login.html')
@@ -36,17 +36,10 @@ def dashboard(request):
     except ValueError:
         ano = hoje.year
 
-    # 1. Contadores globais para os Cards de status geral
-    em_execucao = OrdemServico.objects.filter(status='EM ANDAMENTO').count()
-    
-    concluidos_hoje = OrdemServico.objects.filter(
-        status='CONCLUIDO', 
-        criado_em__date=hoje.date()
-    ).count()
-
-    # 2. Querysets base para aplicação dos filtros avançados
+    # 1. Querysets base para aplicação dos filtros avançados
     ordens_query = OrdemServico.objects.all().order_by('-criado_em')
     gastos_query = Gasto.objects.all()
+    folha_query = FolhaPagamento.objects.all()
 
     if tipo_filtro == 'mes':
         try:
@@ -55,6 +48,7 @@ def dashboard(request):
             mes = hoje.month
         ordens_query = ordens_query.filter(criado_em__year=ano, criado_em__month=mes)
         gastos_query = gastos_query.filter(data__year=ano, data__month=mes)
+        folha_query = folha_query.filter(data__year=ano, data__month=mes)
         
     elif tipo_filtro == 'trimestre':
         try:
@@ -65,6 +59,7 @@ def dashboard(request):
         meses = meses_map.get(trimestre, [1, 2, 3])
         ordens_query = ordens_query.filter(criado_em__year=ano, criado_em__month__in=meses)
         gastos_query = gastos_query.filter(data__year=ano, data__month__in=meses)
+        folha_query = folha_query.filter(data__year=ano, data__month__in=meses)
         
     elif tipo_filtro == 'semanal':
         try:
@@ -73,27 +68,31 @@ def dashboard(request):
             semana = hoje.isocalendar()[1]
         ordens_query = ordens_query.filter(criado_em__year=ano, criado_em__week=semana)
         gastos_query = gastos_query.filter(data__year=ano, data__week=semana)
+        folha_query = folha_query.filter(data__year=ano, data__week=semana)
         
     elif tipo_filtro == 'ano':
         ordens_query = ordens_query.filter(criado_em__year=ano)
         gastos_query = gastos_query.filter(data__year=ano)
+        folha_query = folha_query.filter(data__year=ano)
         
     else:  # 'tudo'
         tipo_filtro = 'tudo'
 
-    # 3. Cálculos financeiros baseados no período filtrado ativo
+    # 2. Cálculos financeiros baseados no período filtrado ativo
     faturamento_periodo = ordens_query.filter(status='CONCLUIDO').aggregate(total=Sum('valor_total'))['total'] or 0
     gastos_periodo = gastos_query.aggregate(total=Sum('valor'))['total'] or 0
-    lucro_periodo = faturamento_periodo - gastos_periodo
+    folha_periodo = folha_query.aggregate(total=Sum('valor'))['total'] or 0
+    
+    # Lucro Líquido = Faturamento - Gastos - Folha de Pagamento/Retiradas
+    lucro_periodo = faturamento_periodo - gastos_periodo - folha_periodo
 
-    # 4. Ordens de Serviço filtradas para a tabela do Dashboard
+    # 3. Ordens de Serviço filtradas para a tabela do Dashboard
     recentes_os = ordens_query[:10]
 
     context = {
-        'em_execucao': em_execucao,
-        'concluidos_hoje': concluidos_hoje,
         'faturamento_periodo': faturamento_periodo,
         'gastos_periodo': gastos_periodo,
+        'folha_periodo': folha_periodo,
         'lucro_periodo': lucro_periodo,
         'recentes_os': recentes_os,
         'tipo_filtro': tipo_filtro,
@@ -445,3 +444,60 @@ def gasto_delete(request, pk):
         gasto.delete()
         return redirect('gastos_list')
     return render(request, 'core/gasto_confirm_delete.html', {'gasto': gasto})
+
+@login_required
+def folha_pagamento_list(request):
+    hoje = datetime.now()
+    tipo_filtro = request.GET.get('tipo', 'mes')
+    mes_atual = request.GET.get('mes', hoje.strftime('%m'))
+    trimestre_atual = request.GET.get('trimestre', '1')
+    semana_atual = request.GET.get('semana', str(hoje.isocalendar()[1]))
+    ano_atual = request.GET.get('ano', str(hoje.year))
+
+    pagamentos = FolhaPagamento.objects.all()
+
+    # Aplicação dos filtros
+    if tipo_filtro == 'mes' and ano_atual and mes_atual:
+        pagamentos = pagamentos.filter(data__year=ano_atual, data__month=mes_atual)
+    elif tipo_filtro == 'trimestre' and ano_atual and trimestre_atual:
+        trimestre = int(trimestre_atual)
+        if trimestre == 1:
+            meses = [1, 2, 3]
+        elif trimestre == 2:
+            meses = [4, 5, 6]
+        elif trimestre == 3:
+            meses = [7, 8, 9]
+        else:
+            meses = [10, 11, 12]
+        pagamentos = pagamentos.filter(data__year=ano_atual, data__month__in=meses)
+    elif tipo_filtro == 'semanal' and ano_atual and semana_atual:
+        pagamentos = pagamentos.filter(data__year=ano_atual, data__week=semana_atual)
+    elif tipo_filtro == 'ano' and ano_atual:
+        pagamentos = pagamentos.filter(data__year=ano_atual)
+
+    pagamentos = pagamentos.order_by('-data')
+
+    # Totais
+    total_filtrado = pagamentos.aggregate(total=Sum('valor'))['total'] or 0
+    total_ano = FolhaPagamento.objects.filter(data__year=ano_atual).aggregate(total=Sum('valor'))['total'] or 0
+
+    if request.method == 'POST':
+        form = FolhaPagamentoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('folha_pagamento_list')
+    else:
+        form = FolhaPagamentoForm()
+
+    context = {
+        'pagamentos': pagamentos,
+        'form': form,
+        'total_filtrado': total_filtrado,
+        'total_ano': total_ano,
+        'tipo_filtro': tipo_filtro,
+        'mes_atual': mes_atual,
+        'trimestre_atual': trimestre_atual,
+        'semana_atual': semana_atual,
+        'ano_atual': ano_atual,
+    }
+    return render(request, 'core/folha_pagamento_list.html', context)
