@@ -3,7 +3,7 @@ from django.utils import timezone
 
 class Cliente(models.Model):
     nome = models.CharField(max_length=100)
-    telefone = models.CharField(max_length=20)
+    telefone = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     criado_em = models.DateTimeField(auto_now_add=True)
 

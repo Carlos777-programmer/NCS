@@ -58,7 +58,6 @@
         /* Estilo aplicado automaticamente via JS ou nos widgets */
         .form-input, 
         .form-card input[type="text"],
-        .form-card input[type="email"],
         .form-card input[type="tel"],
         .form-card input[type="number"],
         .form-card select,
@@ -131,13 +130,15 @@
         <form method="POST">
             {% csrf_token %}
             {% for field in form %}
-                <div class="form-group">
-                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}
-                        <span style="color: #f75a68; font-size: 12px; margin-top: 5px; display: block;">{{ field.errors.0 }}</span>
-                    {% endif %}
-                </div>
+                {% if field.name != 'email' %}
+                    <div class="form-group">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <span style="color: #f75a68; font-size: 12px; margin-top: 5px; display: block;">{{ field.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                {% endif %}
             {% endfor %}
             <button type="submit" class="btn-submit">Salvar Cliente</button>
         </form>

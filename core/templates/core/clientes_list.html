@@ -21,7 +21,6 @@
                 <tr>
                     <th>Nome</th>
                     <th>Telefone</th>
-                    <th>E-mail</th>
                     <th>Cadastrado em</th>
                     <th style="text-align: center;">Ações</th>
                 </tr>
@@ -30,8 +29,7 @@
                 {% for cliente in clientes %}
                 <tr>
                     <td style="color: var(--text-main); font-weight: 600;">{{ cliente.nome }}</td>
-                    <td>{{ cliente.telefone }}</td>
-                    <td>{{ cliente.email|default:"-" }}</td>
+                    <td>{{ cliente.telefone|default:"-"}}</td>
                     <td>{{ cliente.criado_em|date:"d/m/Y H:i" }}</td>
                     <td style="text-align: center; white-space: nowrap;">
                         <!-- Botão de Editar -->
@@ -46,7 +44,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted);">
                         <i class="fa-solid fa-folder-open" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
                         Nenhum cliente cadastrado ainda.
                     </td>

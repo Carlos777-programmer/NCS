@@ -26,7 +26,10 @@
             {% for field in form %}
             <div style="display: flex; flex-direction: column; gap: 8px; position: relative;">
                 <label for="{{ field.id_for_label }}" style="color: var(--text-main); font-weight: 500; font-size: 13px; text-transform: uppercase;">
-                    {{ field.label }}
+                    {{ field.label }} 
+                    {% if field.name == 'carro' or field.name == 'veiculo' %}
+                        <span style="color: var(--text-muted); font-size: 11px; text-transform: none; font-weight: normal;">(Opcional)</span>
+                    {% endif %}
                 </label>
                 
                 {% if field.name == 'cliente' %}
@@ -38,6 +41,11 @@
                         <div id="dropdown-clientes" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #0f172a; border: 1px solid var(--borda); border-radius: 8px; max-height: 200px; overflow-y: auto; z-index: 1000; margin-top: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
                         </div>
                     </div>
+                {% elif field.name == 'carro' or field.name == 'veiculo' %}
+                    <!-- Campo de Carro Dinâmico (Filtrado pelo cliente selecionado) -->
+                    <select name="{{ field.name }}" id="id_{{ field.name }}">
+                        <option value="">Selecione um cliente primeiro...</option>
+                    </select>
                 {% else %}
                     {{ field }}
                 {% endif %}
@@ -60,15 +68,28 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 
 <script>
-    // Lista de clientes injetada pelo Django para o Autocomplete
+    // Lista de clientes injetada pelo Django para o Autocomplete[cite: 4]
     const clientesData = [
         {% for choice in form.cliente.field.queryset %}
         { id: "{{ choice.pk }}", nome: "{{ choice.nome|escapejs }}" },
         {% endfor %}
     ];
 
+    // Lista de carros/veículos injetada pelo Django para filtro dinâmico
+    const carrosData = [
+        {% if form.carro %}
+            {% for carro in form.carro.field.queryset %}
+            { id: "{{ carro.pk }}", cliente_id: "{{ carro.cliente.pk }}", nome: "{{ carro.modelo|default:carro.nome|default:carro|escapejs }}" },
+            {% endfor %}
+        {% elif form.veiculo %}
+            {% for veiculo in form.veiculo.field.queryset %}
+            { id: "{{ veiculo.pk }}", cliente_id: "{{ veiculo.cliente.pk }}", nome: "{{ veiculo.modelo|default:veiculo.nome|default:veiculo|escapejs }}" },
+            {% endfor %}
+        {% endif %}
+    ];
+
     document.addEventListener('DOMContentLoaded', function() {
-        // Flatpickr para Data/Hora
+        // Flatpickr para Data/Hora[cite: 4]
         const inputDataHora = document.getElementById('id_data_hora');
         if (inputDataHora) {
             flatpickr(inputDataHora, {
@@ -81,20 +102,59 @@
             });
         }
 
-        // Lógica do Autocomplete de Cliente
+        // Elementos do Cliente e Carro
         const inputBusca = document.getElementById('input-busca-cliente');
         const inputHidden = document.getElementById('id_cliente_hidden');
         const dropdown = document.getElementById('dropdown-clientes');
+        
+        // Descobre se o campo chama 'carro' ou 'veiculo' no DOM
+        const selectCarro = document.getElementById('id_carro') || document.getElementById('id_veiculo');
+        const carroPreSelecionado = "{{ form.carro.value|default:form.veiculo.value|default:'' }}";
 
-        if (inputBusca && inputHidden && dropdown) {
-            // Se houver valor pré-preenchido (ex: erro de validação), ajusta o texto
-            if (inputHidden.value) {
-                const clienteSelecionado = clientesData.find(c => c.id === inputHidden.value);
-                if (clienteSelecionado) {
-                    inputBusca.value = clienteSelecionado.nome;
-                }
+        // Função para atualizar as opções do select de carros com base no ID do cliente
+        function atualizarCarros(clienteId, manterSelecionado = '') {
+            if (!selectCarro) return;
+
+            selectCarro.innerHTML = '<option value="">Nenhum / Selecione um carro (Opcional)</option>';
+
+            if (!clienteId) {
+                selectCarro.innerHTML = '<option value="">Selecione um cliente primeiro...</option>';
+                selectCarro.disabled = true;
+                return;
             }
 
+            const carrosDoCliente = carrosData.filter(c => c.cliente_id === clienteId);
+
+            if (carrosDoCliente.length > 0) {
+                carrosDoCliente.forEach(carro => {
+                    const opt = document.createElement('option');
+                    opt.value = carro.id;
+                    opt.textContent = carro.nome;
+                    if (carro.id === manterSelecionado) {
+                        opt.selected = true;
+                    }
+                    selectCarro.appendChild(opt);
+                });
+                selectCarro.disabled = false;
+            } else {
+                selectCarro.innerHTML = '<option value="">Este cliente não possui carros cadastrados</option>';
+                selectCarro.disabled = false;
+            }
+        }
+
+        // Inicialização caso haja valor pré-preenchido (ex: erro de validação ou edição)
+        if (inputHidden && inputHidden.value) {
+            const clienteSelecionado = clientesData.find(c => c.id === inputHidden.value);
+            if (clienteSelecionado && inputBusca) {
+                inputBusca.value = clienteSelecionado.nome;
+            }
+            atualizarCarros(inputHidden.value, carroPreSelecionado);
+        } else if (selectCarro) {
+            selectCarro.disabled = true;
+        }
+
+        // Lógica do Autocomplete de Cliente[cite: 4]
+        if (inputBusca && inputHidden && dropdown) {
             inputBusca.addEventListener('input', function() {
                 const termo = this.value.toLowerCase().trim();
                 dropdown.innerHTML = '';
@@ -102,6 +162,7 @@
                 if (termo.length === 0) {
                     dropdown.style.display = 'none';
                     inputHidden.value = '';
+                    atualizarCarros('');
                     return;
                 }
 
@@ -129,6 +190,7 @@
                             inputBusca.value = cliente.nome;
                             inputHidden.value = cliente.id;
                             dropdown.style.display = 'none';
+                            atualizarCarros(cliente.id);
                         });
 
                         dropdown.appendChild(item);
@@ -142,10 +204,11 @@
                     dropdown.appendChild(vazio);
                     dropdown.style.display = 'block';
                     inputHidden.value = '';
+                    atualizarCarros('');
                 }
             });
 
-            // Fecha o dropdown ao clicar fora
+            // Fecha o dropdown ao clicar fora[cite: 4]
             document.addEventListener('click', function(e) {
                 if (!inputBusca.contains(e.target) && !dropdown.contains(e.target)) {
                     dropdown.style.display = 'none';
