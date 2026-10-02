@@ -28,7 +28,6 @@
                 <label for="{{ field.id_for_label }}" style="color: var(--text-main); font-weight: 500; font-size: 13px; text-transform: uppercase;">
                     {{ field.label }} 
                     {% if field.name == 'carro' or field.name == 'veiculo' %}
-                        <span style="color: var(--text-muted); font-size: 11px; text-transform: none; font-weight: normal;">(Opcional)</span>
                     {% endif %}
                 </label>
                 
@@ -68,28 +67,32 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
 
 <script>
-    // Lista de clientes injetada pelo Django para o Autocomplete[cite: 4]
+    // Lista de clientes com os respetivos carros/veículos embutidos diretamente
     const clientesData = [
         {% for choice in form.cliente.field.queryset %}
-        { id: "{{ choice.pk }}", nome: "{{ choice.nome|escapejs }}" },
+        { 
+            id: "{{ choice.pk }}", 
+            nome: "{{ choice.nome|escapejs }}",
+            carros: [
+                {% for carro in choice.carro_set.all %}
+                { id: "{{ carro.pk }}", nome: "{{ carro.modelo|default:carro|escapejs }}" },
+                {% endfor %}
+                {% for veiculo in choice.veiculo_set.all %}
+                { id: "{{ veiculo.pk }}", nome: "{{ veiculo.modelo|default:veiculo|escapejs }}" },
+                {% endfor %}
+                {% for carro in choice.carros.all %}
+                { id: "{{ carro.pk }}", nome: "{{ carro.modelo|default:carro|escapejs }}" },
+                {% endfor %}
+                {% for veiculo in choice.veiculos.all %}
+                { id: "{{ veiculo.pk }}", nome: "{{ veiculo.modelo|default:veiculo|escapejs }}" },
+                {% endfor %}
+            ]
+        },
         {% endfor %}
     ];
 
-    // Lista de carros/veículos injetada pelo Django para filtro dinâmico
-    const carrosData = [
-        {% if form.carro %}
-            {% for carro in form.carro.field.queryset %}
-            { id: "{{ carro.pk }}", cliente_id: "{{ carro.cliente.pk }}", nome: "{{ carro.modelo|default:carro.nome|default:carro|escapejs }}" },
-            {% endfor %}
-        {% elif form.veiculo %}
-            {% for veiculo in form.veiculo.field.queryset %}
-            { id: "{{ veiculo.pk }}", cliente_id: "{{ veiculo.cliente.pk }}", nome: "{{ veiculo.modelo|default:veiculo.nome|default:veiculo|escapejs }}" },
-            {% endfor %}
-        {% endif %}
-    ];
-
     document.addEventListener('DOMContentLoaded', function() {
-        // Flatpickr para Data/Hora[cite: 4]
+        // Flatpickr para Data/Hora
         const inputDataHora = document.getElementById('id_data_hora');
         if (inputDataHora) {
             flatpickr(inputDataHora, {
@@ -111,11 +114,11 @@
         const selectCarro = document.getElementById('id_carro') || document.getElementById('id_veiculo');
         const carroPreSelecionado = "{{ form.carro.value|default:form.veiculo.value|default:'' }}";
 
-        // Função para atualizar as opções do select de carros com base no ID do cliente
+        // Função para atualizar as opções do select de carros com base no cliente selecionado
         function atualizarCarros(clienteId, manterSelecionado = '') {
             if (!selectCarro) return;
 
-            selectCarro.innerHTML = '<option value="">Nenhum / Selecione um carro (Opcional)</option>';
+            selectCarro.innerHTML = '<option value="">Selecione um carro (Opcional)</option>';
 
             if (!clienteId) {
                 selectCarro.innerHTML = '<option value="">Selecione um cliente primeiro...</option>';
@@ -123,14 +126,16 @@
                 return;
             }
 
-            const carrosDoCliente = carrosData.filter(c => c.cliente_id === clienteId);
+            // Encontra o cliente na lista e obtém os seus respetivos carros
+            const clienteEncontrado = clientesData.find(c => String(c.id) === String(clienteId));
+            const carrosDoCliente = clienteEncontrado ? clienteEncontrado.carros : [];
 
             if (carrosDoCliente.length > 0) {
                 carrosDoCliente.forEach(carro => {
                     const opt = document.createElement('option');
                     opt.value = carro.id;
                     opt.textContent = carro.nome;
-                    if (carro.id === manterSelecionado) {
+                    if (String(carro.id) === String(manterSelecionado)) {
                         opt.selected = true;
                     }
                     selectCarro.appendChild(opt);
@@ -144,7 +149,7 @@
 
         // Inicialização caso haja valor pré-preenchido (ex: erro de validação ou edição)
         if (inputHidden && inputHidden.value) {
-            const clienteSelecionado = clientesData.find(c => c.id === inputHidden.value);
+            const clienteSelecionado = clientesData.find(c => String(c.id) === String(inputHidden.value));
             if (clienteSelecionado && inputBusca) {
                 inputBusca.value = clienteSelecionado.nome;
             }
@@ -153,7 +158,7 @@
             selectCarro.disabled = true;
         }
 
-        // Lógica do Autocomplete de Cliente[cite: 4]
+        // Lógica do Autocomplete de Cliente
         if (inputBusca && inputHidden && dropdown) {
             inputBusca.addEventListener('input', function() {
                 const termo = this.value.toLowerCase().trim();
@@ -208,7 +213,7 @@
                 }
             });
 
-            // Fecha o dropdown ao clicar fora[cite: 4]
+            // Fecha o dropdown ao clicar fora
             document.addEventListener('click', function(e) {
                 if (!inputBusca.contains(e.target) && !dropdown.contains(e.target)) {
                     dropdown.style.display = 'none';
