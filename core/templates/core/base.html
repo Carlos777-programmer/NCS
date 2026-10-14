@@ -45,7 +45,7 @@
             flex-direction: column;
             flex-shrink: 0;
             transition: all 0.3s ease;
-            overflow-y: auto; /* Permite a rolagem vertical de todo o menu no mobile */
+            overflow-y: auto;
         }
 
         .sidebar-logo-container {
@@ -97,6 +97,18 @@
         .nav-item:hover, .nav-item.active {
             background: rgba(13, 110, 253, 0.1);
             color: var(--ncs-blue-light);
+        }
+
+        /* Estilo especial para destacar o botão da Loja / IA */
+        .nav-item.loja-highlight {
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            color: var(--ncs-blue-light);
+            font-weight: 600;
+        }
+        .nav-item.loja-highlight:hover {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: rgba(56, 189, 248, 0.4);
         }
 
         /* Content */
@@ -238,6 +250,11 @@
             </div>
             <h5>"A única maneira de fazer um excelente trabalho é amar o que você faz." — Steve Jobs</h5>
         </div>
+
+        <!-- Botão de Acesso Rápido à Loja com IA (Posicionado acima do Dashboard) -->
+        <a href="{% url 'novo_produto_ia' %}" class="nav-item loja-highlight {% block nav_loja_ia %}{% endblock %}">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Loja & IA
+        </a>
 
         <a href="{% url 'dashboard' %}" class="nav-item {% block nav_dashboard %}{% endblock %}"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
         <a href="{% url 'clientes_list' %}" class="nav-item {% block nav_clientes %}{% endblock %}"><i class="fa-solid fa-users"></i> Clientes</a>

@@ -1,0 +1,170 @@
+{% extends 'loja/loja_base.html' %}
+
+{% block title %}NCS ERP | Cadastrar Produto com IA{% endblock %}
+{% block nav_novo_ia %}active{% endblock %}
+
+{% block content %}
+    <header class="topbar">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <button class="btn-toggle" id="sidebarToggle" title="Esconder/Exibir Menu"><i class="fa-solid fa-bars"></i></button>
+            <div>
+                <h1 style="margin: 0; font-size: 22px;">Registo Inteligente de Produtos</h1>
+                <p style="margin: 5px 0 0 0; color: var(--text-muted);">Cole a descrição livre do produto e preencha os campos automaticamente com IA</p>
+            </div>
+        </div>
+        <a href="/admin/loja/produtoloja/" target="_blank" class="btn-toggle" style="text-decoration: none; font-size: 13px;">
+            <i class="fa-solid fa-database"></i> Painel Admin
+        </a>
+    </header>
+
+    <!-- CAIXA DA INTELIGÊNCIA ARTIFICIAL -->
+    <div class="table-container" style="margin-bottom: 25px; border-color: rgba(56, 189, 248, 0.3);">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+            <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--ncs-blue-light); font-size: 18px;"></i>
+            <h3 style="margin: 0; font-size: 16px; color: var(--text-main);">Assistente de IA em Linguagem Natural</h3>
+        </div>
+        <p style="margin: 0 0 15px 0; color: var(--text-muted); font-size: 13px;">Cole abaixo o texto descritivo do fabricante ou fornecedor:</p>
+        
+        <textarea id="aiInput" rows="3" placeholder="Ex: Vonixx Strike Descontaminante Ferroso 500ml, custa 59.90, remove fuligem, pH neutro..." class="form-control" style="resize: vertical; font-family: inherit; font-size: 14px;"></textarea>
+        
+        <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+            <button type="button" id="btnProcessar" onclick="processarComIA()" class="btn-primary" style="border: none; cursor: pointer;">
+                <i class="fa-solid fa-microchip"></i> Preencher Campos com IA
+            </button>
+        </div>
+    </div>
+
+    <!-- FORMULÁRIO DE CADASTRO DO PRODUTO -->
+    <div class="table-container">
+        <h3 style="margin-top: 0; margin-bottom: 20px; font-size: 16px; color: var(--text-main); border-bottom: 1px solid var(--borda); padding-bottom: 10px;">
+            <i class="fa-solid fa-box-open"></i> Detalhes do Produto
+        </h3>
+
+        <form method="POST" enctype="multipart/form-data" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; align-items: flex-end;">
+            {% csrf_token %}
+            
+            <div style="grid-column: 1 / -1;">
+                <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Nome do Produto</label>
+                <input type="text" name="name" id="id_name" required class="form-control">
+            </div>
+
+            <div>
+                <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Etapa / Ritual</label>
+                <select name="ritual" id="id_ritual" class="form-control" style="background: var(--bg-dark);">
+                    <option value="lavagem">Lavagem</option>
+                    <option value="blindagem">Blindagem</option>
+                    <option value="acabamento">Acabamento</option>
+                </select>
+            </div>
+
+            <div>
+                <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Tag / Destaque</label>
+                <input type="text" name="tag" id="id_tag" class="form-control" placeholder="Ex: Lavagem segura">
+            </div>
+
+            <div>
+                <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Preço (R$)</label>
+                <input type="number" step="0.01" name="price" id="id_price" class="form-control" placeholder="0.00">
+            </div>
+
+            <div>
+                <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Ícone (FontAwesome)</label>
+                <input type="text" name="icon" id="id_icon" value="droplets" class="form-control">
+            </div>
+
+            <div style="grid-column: 1 / -1;">
+                <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Descrição Comercial</label>
+                <textarea name="description" id="id_description" rows="2" class="form-control" style="resize: vertical; font-family: inherit;"></textarea>
+            </div>
+
+            <div>
+                <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Volume</label>
+                <input type="text" name="volume" id="id_volume" class="form-control" value="A confirmar">
+            </div>
+
+            <div>
+                <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Rendimento</label>
+                <input type="text" name="rendimento" id="id_rendimento" class="form-control" value="A confirmar">
+            </div>
+
+            <div>
+                <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">pH</label>
+                <input type="text" name="ph" id="id_ph" class="form-control" value="A confirmar">
+            </div>
+
+            <div>
+                <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Durabilidade</label>
+                <input type="text" name="durabilidade" id="id_durabilidade" class="form-control" value="A confirmar">
+            </div>
+
+            <div style="grid-column: 1 / -1;">
+                <label style="display: block; color: var(--ncs-blue-light); font-size: 13px; margin-bottom: 6px; font-weight: 600;">Link de Afiliado / Compra</label>
+                <input type="url" name="affiliate_url" class="form-control" placeholder="https://...">
+            </div>
+
+            <div>
+                <label style="display: block; color: var(--text-muted); font-size: 13px; margin-bottom: 6px;">Foto do Produto</label>
+                <input type="file" name="image" class="form-control" style="padding: 8px;">
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 10px; height: 100%; padding-top: 20px;">
+                <input type="checkbox" name="verified_partner" id="verified" checked style="width: 18px; height: 18px; accent-color: var(--ncs-blue);">
+                <label for="verified" style="font-size: 13px; color: var(--text-main); cursor: pointer;">Parceiro verificado / Ativo na vitrine</label>
+            </div>
+
+            <div style="grid-column: 1 / -1; text-align: right; margin-top: 10px; border-top: 1px solid var(--borda); padding-top: 20px;">
+                <button type="submit" class="btn-primary" style="background: #198754; box-shadow: 0 4px 15px rgba(25, 135, 84, 0.3); border: none; cursor: pointer;">
+                    <i class="fa-solid fa-check"></i> Salvar Produto na Loja
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        async function processarComIA() {
+            const texto = document.getElementById('aiInput').value.trim();
+            const btn = document.getElementById('btnProcessar');
+            if (!texto) {
+                alert('Por favor, digite ou cole alguma descrição para a IA processar.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A processar com IA...';
+
+            try {
+                const response = await fetch("{% url 'api_extrair_ia' %}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ texto })
+                });
+
+                const res = await response.json();
+                if (res.success && res.data) {
+                    const d = res.data;
+                    document.getElementById('id_name').value = d.name || '';
+                    document.getElementById('id_ritual').value = d.ritual || 'lavagem';
+                    document.getElementById('id_tag').value = d.tag || '';
+                    document.getElementById('id_description').value = d.description || '';
+                    document.getElementById('id_price').value = d.price || '';
+                    document.getElementById('id_volume').value = d.volume || 'A confirmar';
+                    document.getElementById('id_rendimento').value = d.rendimento || 'A confirmar';
+                    document.getElementById('id_ph').value = d.ph || 'A confirmar';
+                    document.getElementById('id_durabilidade').value = d.durabilidade || 'A confirmar';
+                    document.getElementById('id_icon').value = d.icon || 'droplets';
+                } else {
+                    alert('Erro ao extrair dados: ' + (res.error || 'Desconhecido'));
+                }
+            } catch (err) {
+                alert('Erro de conexão com a API de IA.');
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-microchip"></i> Preencher Campos com IA';
+            }
+        }
+    </script>
+{% endblock %}

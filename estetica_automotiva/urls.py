@@ -7,4 +7,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('garage.urls')),    # Rotas da API para o site / simulador
     path('', include('core.urls')),      # Rotas do sistema principal (login, dashboard, etc.)
+    path('', include('loja.urls')),      # Rotas da API para a loja de afiliados
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
