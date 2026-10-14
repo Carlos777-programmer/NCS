@@ -1,0 +1,31 @@
+{% extends 'loja/loja_base.html' %}
+
+{% block title %}NCS ERP | Excluir Produto{% endblock %}
+
+{% block content %}
+<div class="topbar">
+    <div>
+        <h1 style="margin: 0; font-size: 24px; color: #ef4444;">Excluir Produto</h1>
+        <p style="color: var(--text-muted); margin: 5px 0 0 0; font-size: 14px;">Esta ação não pode ser desfeita.</p>
+    </div>
+    <a href="{% url 'gerenciar_produtos' %}" class="btn-toggle" style="text-decoration: none;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar
+    </a>
+</div>
+
+<div class="table-container" style="max-width: 600px; text-align: center; padding: 40px;">
+    <i class="fa-solid fa-triangle-exclamation" style="font-size: 48px; color: #ef4444; margin-bottom: 20px;"></i>
+    <h3 style="margin: 0 0 10px 0; font-size: 20px;">Tem certeza que deseja excluir o produto?</h3>
+    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 30px;">
+        <strong>{{ produto.name }}</strong> será removido permanentemente do ERP e da vitrine.
+    </p>
+
+    <form method="POST" style="display: flex; justify-content: center; gap: 15px;">
+        {% csrf_token %}
+        <a href="{% url 'gerenciar_produtos' %}" class="btn-toggle" style="text-decoration: none; padding: 12px 24px;">Cancelar</a>
+        <button type="submit" class="btn-primary" style="background: #ef4444; border: none; cursor: pointer; padding: 12px 24px;">
+            <i class="fa-solid fa-trash"></i> Sim, Excluir
+        </button>
+    </form>
+</div>
+{% endblock %}
