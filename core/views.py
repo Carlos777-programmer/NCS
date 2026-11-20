@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, OuterRef, Subquery
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.core.serializers.json import DjangoJSONEncoder
 from datetime import datetime
@@ -105,8 +105,63 @@ def dashboard(request):
 
 @login_required
 def clientes_list(request):
-    clientes = Cliente.objects.all().order_by('-criado_em')
-    return render(request, 'core/clientes_list.html', {'clientes': clientes})
+    hoje = timezone.localdate()
+    query = request.GET.get('q', '').strip()
+    filtro_visita = request.GET.get('visita', 'todos').strip()
+
+    # Busca a data da última OS do cliente
+    # Se quiser contar apenas OS concluídas, adicione: .filter(status='CONCLUIDO')
+    ultima_os_subquery = (
+        OrdemServico.objects.filter(cliente=OuterRef('pk'))
+        .order_by('-criado_em')
+        .values('criado_em')[:1]
+    )
+
+    clientes_qs = (
+        Cliente.objects.annotate(ultima_os_data=Subquery(ultima_os_subquery))
+        .order_by('-criado_em')
+    )
+
+    if query:
+        clientes_qs = clientes_qs.filter(
+            Q(nome__icontains=query) |
+            Q(telefone__icontains=query)
+        )
+
+    clientes = []
+    for cliente in clientes_qs:
+        dias_ultima_visita = None
+        if cliente.ultima_os_data:
+            data_ref = (
+                cliente.ultima_os_data.date()
+                if hasattr(cliente.ultima_os_data, 'date')
+                else cliente.ultima_os_data
+            )
+            dias_ultima_visita = max((hoje - data_ref).days, 0)
+
+        cliente.dias_ultima_visita = dias_ultima_visita
+
+        if filtro_visita == 'ate_15':
+            if dias_ultima_visita is not None and dias_ultima_visita <= 15:
+                clientes.append(cliente)
+        elif filtro_visita == '16_30':
+            if dias_ultima_visita is not None and 16 <= dias_ultima_visita <= 30:
+                clientes.append(cliente)
+        elif filtro_visita == 'acima_30':
+            if dias_ultima_visita is not None and dias_ultima_visita > 30:
+                clientes.append(cliente)
+        elif filtro_visita == 'sem_visita':
+            if dias_ultima_visita is None:
+                clientes.append(cliente)
+        else:
+            clientes.append(cliente)
+
+    context = {
+        'clientes': clientes,
+        'query': query,
+        'filtro_visita': filtro_visita,
+    }
+    return render(request, 'core/clientes_list.html', context)
 
 @login_required
 def cliente_create(request):

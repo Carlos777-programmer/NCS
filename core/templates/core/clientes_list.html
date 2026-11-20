@@ -15,12 +15,49 @@
         <a href="{% url 'cliente_create' %}" class="btn-primary"><i class="fa-solid fa-user-plus"></i> Novo Cliente</a>
     </header>
 
+    <section class="filter-bar" style="margin-bottom: 18px;">
+        <form method="GET" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+            <div style="flex: 1; min-width: 220px;">
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ query }}"
+                    placeholder="Buscar por nome ou telefone..."
+                    style="width: 100%; padding: 10px 14px; background: rgba(10, 15, 28, 0.85); border: 1px solid var(--borda, #1e293b); border-radius: 8px; color: var(--text-main); font-size: 14px; box-sizing: border-box; outline: none;"
+                >
+            </div>
+
+            <select
+                name="visita"
+                onchange="this.form.submit()"
+                style="padding: 10px 14px; background: rgba(10, 15, 28, 0.85); border: 1px solid var(--borda, #1e293b); border-radius: 8px; color: var(--text-main); font-size: 14px; outline: none; cursor: pointer;"
+            >
+                <option value="todos" {% if filtro_visita == 'todos' or not filtro_visita %}selected{% endif %}>Última visita: Todos</option>
+                <option value="ate_15" {% if filtro_visita == 'ate_15' %}selected{% endif %}>Até 15 dias</option>
+                <option value="16_30" {% if filtro_visita == '16_30' %}selected{% endif %}>16 a 30 dias</option>
+                <option value="acima_30" {% if filtro_visita == 'acima_30' %}selected{% endif %}>Mais de 30 dias</option>
+                <option value="sem_visita" {% if filtro_visita == 'sem_visita' %}selected{% endif %}>Sem visita / Sem OS</option>
+            </select>
+
+            <button type="submit" class="btn-primary" style="padding: 10px 16px;">
+                <i class="fa-solid fa-magnifying-glass"></i> Filtrar
+            </button>
+
+            {% if query or filtro_visita and filtro_visita != 'todos' %}
+                <a href="{% url 'clientes_list' %}" style="padding: 10px 14px; border-radius: 8px; border: 1px solid var(--borda, #1e293b); color: var(--text-muted); text-decoration: none; font-size: 13px;">
+                    Limpar
+                </a>
+            {% endif %}
+        </form>
+    </section>
+
     <section class="table-container">
         <table>
             <thead>
                 <tr>
                     <th>Nome</th>
                     <th>Telefone</th>
+                    <th>Última visita</th>
                     <th>Cadastrado em</th>
                     <th style="text-align: center;">Ações</th>
                 </tr>
@@ -29,7 +66,25 @@
                 {% for cliente in clientes %}
                 <tr>
                     <td style="color: var(--text-main); font-weight: 600;">{{ cliente.nome }}</td>
-                    <td>{{ cliente.telefone|default:"-"}}</td>
+                    <td>{{ cliente.telefone|default:"-" }}</td>
+                    <td>
+                        {% if cliente.dias_ultima_visita is not None %}
+                            {% if cliente.dias_ultima_visita == 0 %}
+                                <span style="color: #38bdf8;">Hoje</span>
+                            {% elif cliente.dias_ultima_visita == 1 %}
+                                <span style="color: var(--text-main);">Há 1 dia</span>
+                            {% elif cliente.dias_ultima_visita <= 30 %}
+                                <span style="color: var(--text-main);">Há {{ cliente.dias_ultima_visita }} dias</span>
+                            {% else %}
+                                <span style="color: #fbbf24;">Há {{ cliente.dias_ultima_visita }} dias</span>
+                            {% endif %}
+                            <span style="color: var(--text-muted); font-size: 12px;">
+                                · {{ cliente.ultima_os_data|date:"d/m/Y" }}
+                            </span>
+                        {% else %}
+                            <span style="color: var(--text-muted);">-</span>
+                        {% endif %}
+                    </td>
                     <td>{{ cliente.criado_em|date:"d/m/Y H:i" }}</td>
                     <td style="text-align: center; white-space: nowrap;">
                         <!-- Botão de Editar -->
@@ -44,9 +99,9 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
                         <i class="fa-solid fa-folder-open" style="font-size: 32px; margin-bottom: 10px; display: block;"></i>
-                        Nenhum cliente cadastrado ainda.
+                        Nenhum cliente encontrado com esses filtros.
                     </td>
                 </tr>
                 {% endfor %}    
